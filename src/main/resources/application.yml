@@ -1,12 +1,17 @@
-spring:
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: root
-    password: root
-  data:
+spring.datasource:
+  driver-class-name: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/postgres
+  username: root
+  password: root
+
+spring.data:
     mongodb:
-      uri: mongodb://localhost:27017
+      host: localhost
+      port: 27017
       username: root
       password: root
       database: fromdb
+
+spring:
+  jpa:
+    defer-datasource-initialization: true
