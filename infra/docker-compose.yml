@@ -1,0 +1,21 @@
+version: '2'
+services:
+  postgres:
+    container_name: local-postgres
+    image: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - APP_DB_NAME=todb
+  mongo:
+    container_name: local-mongo
+    image: mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=fromdb
