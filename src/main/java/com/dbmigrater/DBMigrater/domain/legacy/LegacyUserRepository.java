@@ -1,6 +1,6 @@
 package com.dbmigrater.DBMigrater.domain.legacy;
 
-import com.dbmigrater.DBMigrater.entity.legacy.User;
+import com.dbmigrater.DBMigrater.domain.legacy.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
