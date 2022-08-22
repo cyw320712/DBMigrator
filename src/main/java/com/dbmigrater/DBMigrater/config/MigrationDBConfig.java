@@ -27,10 +27,10 @@ import java.util.Map;
         transactionManagerRef = "migrationTransactionManager",
         basePackages = "com.dbmigrater.DBMigrater.repository.migration"
 )
-@ConfigurationProperties(prefix = "spring.datasource")
 public class MigrationDBConfig {
     @Bean
     @Primary
+    @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource migrationDataSource() {
         return DataSourceBuilder.create().build();
     }
