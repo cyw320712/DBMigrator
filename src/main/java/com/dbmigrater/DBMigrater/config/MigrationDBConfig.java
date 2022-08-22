@@ -25,7 +25,7 @@ import java.util.Map;
 @EnableJpaRepositories(
         entityManagerFactoryRef = "migrationEntityManager",
         transactionManagerRef = "migrationTransactionManager",
-        basePackages = "com.dbmigrater.DBMigrater.repository.migration"
+        basePackages = "com.dbmigrater.DBMigrater.domain.migration"
 )
 public class MigrationDBConfig {
     @Bean
@@ -49,7 +49,7 @@ public class MigrationDBConfig {
     public LocalContainerEntityManagerFactoryBean migrationEntityManager() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(migrationDataSource());
-        em.setPackagesToScan("com.dbmigrater.DBMigrater.entity.migration");
+        em.setPackagesToScan("com.dbmigrater.DBMigrater.domain.migration");
 
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(adapter);
