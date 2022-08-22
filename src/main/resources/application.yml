@@ -7,7 +7,14 @@ spring.datasource:
 spring.data:
     mongodb:
       host: localhost
-      port: 27017
+      port: 27018
       username: "root"
       password: "root"
       database: "fromdb"
+      authentication-database: admin
+
+spring:
+  jpa:
+    show-sql: true
+
+

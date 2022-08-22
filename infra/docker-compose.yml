@@ -9,14 +9,16 @@ services:
       POSTGRES_USERNAME: "root"
       POSTGRES_PASSWORD: "root"
     volumes:
-      - './postgres/data:/var/lib/postgresql/data'
+      - ./postgres/data:/var/lib/postgresql/data
   mongo:
     container_name: local-mongo
-    image: mongo
+    image: "mongo:4.4.3"
     restart: always
     ports:
-      - '27017:27017'
+      - '27018:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "root"
-      MONGO_INITDB_ROOT_PASSWORD: "root"
-      MONGO_INITDB_DATABASE: "fromdb"
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=fromdb
+    volumes:
+      - ./mongo/data:/data/db
