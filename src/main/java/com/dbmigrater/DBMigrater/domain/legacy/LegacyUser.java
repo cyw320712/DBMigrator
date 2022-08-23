@@ -1,10 +1,8 @@
 package com.dbmigrater.DBMigrater.domain.legacy;
 
-import com.dbmigrater.DBMigrater.domain.migration.MigrationUserRepository;
-import com.dbmigrater.DBMigrater.domain.migration.NewUser;
+import com.dbmigrater.DBMigrater.domain.migration.MigratedUser;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -45,8 +43,8 @@ public class LegacyUser implements BaseLegacyEntity {
 
     @Override
     public Object convertAndMigration() {
-        NewUser newUser = new NewUser(userId, email, name, type, coin);
+        MigratedUser migratedUser = new MigratedUser(userId, email, name, type, coin);
 
-        return newUser;
+        return migratedUser;
     }
 }

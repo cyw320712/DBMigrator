@@ -5,13 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @NoArgsConstructor
 @Getter
 @Entity
 @Table(name = "user", schema = "public")
-public class NewUser extends BaseTimeEntity {
+public class MigratedUser extends BaseTimeEntity {
 
     @Id
     private Long userId;
@@ -25,7 +24,7 @@ public class NewUser extends BaseTimeEntity {
     private int coin;
 
     @Builder
-    public NewUser(Long userId, String email, String name, String type, int coin){
+    public MigratedUser(Long userId, String email, String name, String type, int coin){
         super();
 
         this.userId = userId;

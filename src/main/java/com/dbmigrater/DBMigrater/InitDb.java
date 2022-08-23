@@ -1,6 +1,6 @@
 package com.dbmigrater.DBMigrater;
 
-import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserLegacyRepository;
+import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserRepository;
 import com.dbmigrater.DBMigrater.domain.legacy.LegacyUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class InitDb {
     @Component
     @RequiredArgsConstructor
     static class InitService {
-        private final LegacyUserLegacyRepository em;
+        private final LegacyUserRepository em;
 
         @Transactional
         public void initdb() {
