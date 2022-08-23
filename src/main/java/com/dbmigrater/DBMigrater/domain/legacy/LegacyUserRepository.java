@@ -6,8 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
-public interface LegacyUserRepository extends MongoRepository<User, Integer> {
+public interface LegacyUserRepository extends MongoRepository<User, Long> {
     User findUserByUserId(Long userId);
 
     List<User> findUserByUserIdBetween(Long startId, Long endId);

@@ -6,6 +6,7 @@ import com.dbmigrater.DBMigrater.domain.migration.User;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class Migrator implements Runnable {
@@ -30,8 +31,8 @@ public class Migrator implements Runnable {
 
             objects.forEach( object -> {
                 User convertedObject = convertDataByType(object);
+
                 migrationRepository.save(convertedObject);
-                entityManager.detach(object);
             });
         }
         catch (Exception e) {
@@ -40,6 +41,12 @@ public class Migrator implements Runnable {
     }
 
     private User convertDataByType(com.dbmigrater.DBMigrater.domain.legacy.User user) {
+        // TODO: 신경써야하는 타입 변환 정리하기
+        // 1. Convert json string to Json 등
+
+        Field[] legacyFields = user.getClass().getFields();
+        Field[] migrationFields = User.class.getFields();
+
         return User.builder()
                 .userId(user.getUserId())
                 .name(user.getName())

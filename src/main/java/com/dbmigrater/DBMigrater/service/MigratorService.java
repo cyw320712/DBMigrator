@@ -38,7 +38,7 @@ public class MigratorService {
         catch (InterruptedException e) {
             executor.shutdownNow();
         }
-
+        System.out.println("Porting Completed");
         return "Complete";
     }
 }
