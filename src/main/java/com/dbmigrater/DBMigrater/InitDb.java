@@ -1,7 +1,7 @@
 package com.dbmigrater.DBMigrater;
 
-import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserRepository;
-import com.dbmigrater.DBMigrater.domain.legacy.LegacyUser;
+import com.dbmigrater.DBMigrater.domain.legacy.thignsflow.LegacyUserRepository;
+import com.dbmigrater.DBMigrater.domain.legacy.thignsflow.LegacyUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +14,6 @@ public class InitDb {
 
     private final InitService initService;
 
-    @PostConstruct
     public void init(){
         initService.initdb();
     }

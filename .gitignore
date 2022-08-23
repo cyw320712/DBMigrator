@@ -36,5 +36,5 @@ out/
 ### VS Code ###
 .vscode/
 
-### Private class (Domain) ###
-**/src/main/**/migration/thingsflow/
+### Private Area (Domains) ###
+**/thingsflow/*
