@@ -1,56 +1,42 @@
 package com.dbmigrater.DBMigrater.service;
 
-import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserRepository;
-import com.dbmigrater.DBMigrater.domain.migration.MigrationUserRepository;
-import com.dbmigrater.DBMigrater.domain.migration.User;
+import com.dbmigrater.DBMigrater.domain.legacy.BaseLegacyEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import java.lang.reflect.Field;
 import java.util.List;
 
 public class Migrator implements Runnable {
-    private final EntityManager entityManager;
     private final List<List<Object>> task;
 
-    public Migrator(EntityManager entityManager, List<List<Object>> task) {
-        this.entityManager = entityManager;
+    public Migrator(List<List<Object>> task) {
         this.task = task;
     }
 
     @Transactional(readOnly = true)
     public void run() {
-        List<Object> currentTask = task.get(0);
-        LegacyUserRepository legacyRepository = (LegacyUserRepository) currentTask.get(0);
-        MigrationUserRepository migrationRepository = (MigrationUserRepository) currentTask.get(1);
+        task.forEach((one) -> {
+            migrate(one);
+        });
+    }
+
+    private void migrate(List<Object> target) {
+        MongoRepository legacyRepository = (MongoRepository) target.get(0);
+        JpaRepository migrationRepository = (JpaRepository) target.get(1);
 
         try {
-            Long start = new Long(1);
-            Long end = new Long(10000);
-            List<com.dbmigrater.DBMigrater.domain.legacy.User> objects = legacyRepository.findUserByUserIdBetween(start, end);
+            List<BaseLegacyEntity> objects = legacyRepository.findAll();
 
-            objects.forEach( object -> {
-                User convertedObject = convertDataByType(object);
-
-                migrationRepository.save(convertedObject);
+            objects.forEach((object) -> {
+                migrationRepository.save(object.convertAndMigration());
             });
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-    }
 
-    private User convertDataByType(com.dbmigrater.DBMigrater.domain.legacy.User user) {
-        // TODO: 신경써야하는 타입 변환 정리하기
-        // 1. Convert json string to Json 등
-
-        Field[] legacyFields = user.getClass().getFields();
-        Field[] migrationFields = User.class.getFields();
-
-        return User.builder()
-                .userId(user.getUserId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .build();
+        return;
     }
 }

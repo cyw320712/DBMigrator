@@ -1,19 +1,17 @@
 package com.dbmigrater.DBMigrater.domain.migration;
 
-import com.dbmigrater.DBMigrater.domain.BaseTimeEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.index.Indexed;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.util.Date;
 
 @NoArgsConstructor
 @Getter
 @Entity
 @Table(name = "user", schema = "public")
-public class User {
+public class NewUser extends BaseTimeEntity {
 
     @Id
     private Long userId;
@@ -22,10 +20,18 @@ public class User {
 
     private String name;
 
+    private String type;
+
+    private int coin;
+
     @Builder
-    public User(Long userId, String email, String name){
+    public NewUser(Long userId, String email, String name, String type, int coin){
+        super();
+
         this.userId = userId;
         this.email = email;
         this.name = name;
+        this.type = type;
+        this.coin = coin;
     }
 }

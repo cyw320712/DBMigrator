@@ -1,6 +1,6 @@
 package com.dbmigrater.DBMigrater.service;
 
-import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserRepository;
+import com.dbmigrater.DBMigrater.domain.legacy.LegacyUserLegacyRepository;
 import com.dbmigrater.DBMigrater.domain.migration.MigrationUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,9 +16,8 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class MigratorService {
 
-    private final LegacyUserRepository legacyUserRepository;
+    private final LegacyUserLegacyRepository legacyUserRepository;
     private final MigrationUserRepository migrationUserRepository;
-    private final EntityManager entityManager;
 
     private final int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2;
     private final List<List<Object>> taskQueue;
@@ -30,14 +29,15 @@ public class MigratorService {
         taskQueue.add(userPair);
 
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
-        executor.execute(new Migrator(entityManager, taskQueue));
+        executor.execute(new Migrator(taskQueue));
 
         try {
-            executor.awaitTermination(10L, TimeUnit.MINUTES);
+            executor.awaitTermination(10L, TimeUnit.SECONDS);
         }
         catch (InterruptedException e) {
             executor.shutdownNow();
         }
+
         System.out.println("Porting Completed");
         return "Complete";
     }
