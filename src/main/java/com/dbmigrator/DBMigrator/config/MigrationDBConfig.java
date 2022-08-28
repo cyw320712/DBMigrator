@@ -1,4 +1,4 @@
-package com.dbmigrater.DBMigrater.config;
+package com.dbmigrator.DBMigrator.config;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;

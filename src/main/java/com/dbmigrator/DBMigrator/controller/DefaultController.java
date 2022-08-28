@@ -1,6 +1,6 @@
-package com.dbmigrater.DBMigrater.controller;
+package com.dbmigrator.DBMigrator.controller;
 
-import com.dbmigrater.DBMigrater.service.MigratorService;
+import com.dbmigrator.DBMigrator.service.MigratorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

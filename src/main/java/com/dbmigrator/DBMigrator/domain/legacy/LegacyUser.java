@@ -1,6 +1,6 @@
-package com.dbmigrater.DBMigrater.domain.legacy;
+package com.dbmigrator.DBMigrator.domain.legacy;
 
-import com.dbmigrater.DBMigrater.domain.migration.MigratedUser;
+import com.dbmigrator.DBMigrator.domain.migration.MigratedUser;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.mongodb.core.index.Indexed;

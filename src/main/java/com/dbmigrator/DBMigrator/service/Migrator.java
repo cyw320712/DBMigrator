@@ -1,11 +1,10 @@
-package com.dbmigrater.DBMigrater.service;
+package com.dbmigrator.DBMigrator.service;
 
-import com.dbmigrater.DBMigrater.domain.legacy.BaseLegacyEntity;
+import com.dbmigrator.DBMigrator.domain.legacy.BaseLegacyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 
 public class Migrator implements Runnable {

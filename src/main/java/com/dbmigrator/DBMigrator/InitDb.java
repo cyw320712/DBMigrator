@@ -1,4 +1,4 @@
-package com.dbmigrater.DBMigrater;
+package com.dbmigrator.DBMigrator;
 
 import com.dbmigrater.DBMigrater.domain.legacy.thignsflow.LegacyUserRepository;
 import com.dbmigrater.DBMigrater.domain.legacy.thignsflow.LegacyUser;

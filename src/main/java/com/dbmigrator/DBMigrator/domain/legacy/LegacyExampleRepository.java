@@ -1,4 +1,4 @@
-package com.dbmigrater.DBMigrater.domain.legacy;
+package com.dbmigrator.DBMigrator.domain.legacy;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

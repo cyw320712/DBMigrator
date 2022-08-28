@@ -1,4 +1,4 @@
-package com.dbmigrater.DBMigrater.domain.legacy;
+package com.dbmigrator.DBMigrator.domain.legacy;
 
 import com.dbmigrater.DBMigrater.domain.migration.thingsflow.MigratedUser;
 import lombok.Builder;

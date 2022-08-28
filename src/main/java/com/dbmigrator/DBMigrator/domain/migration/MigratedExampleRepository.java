@@ -1,4 +1,4 @@
-package com.dbmigrater.DBMigrater.domain.migration;
+package com.dbmigrator.DBMigrator.domain.migration;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
