@@ -4,13 +4,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @NoArgsConstructor
 @Getter
 @Entity
 @Table(name = "user", schema = "public")
-public class MigratedUser extends BaseTimeEntity {
+public class MigrationExample extends BaseTimeEntity {
 
     @Id
     private Long userId;
@@ -24,7 +26,7 @@ public class MigratedUser extends BaseTimeEntity {
     private int coin;
 
     @Builder
-    public MigratedUser(Long userId, String email, String name, String type, int coin){
+    public MigrationExample(Long userId, String email, String name, String type, int coin){
         super();
 
         this.userId = userId;

@@ -1,6 +1,6 @@
 package com.dbmigrator.DBMigrator.domain.legacy;
 
-import com.dbmigrater.DBMigrater.domain.migration.thingsflow.MigratedUser;
+import com.dbmigrator.DBMigrator.domain.migration.MigrationUser;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -42,9 +42,9 @@ public class LegacyExample implements BaseLegacyEntity {
     }
 
     @Override
-    public Object convertAndMigration() {
-        MigratedUser migratedUser = new MigratedUser(userId, email, name, type, coin);
+    public Object convert() {
+        MigrationUser migrationUser = new MigrationUser(userId, email, name, type, coin);
 
-        return migratedUser;
+        return migrationUser;
     }
 }
