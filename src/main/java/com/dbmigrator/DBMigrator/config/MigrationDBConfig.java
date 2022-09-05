@@ -4,14 +4,10 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
@@ -20,8 +16,6 @@ import javax.sql.DataSource;
 @Configuration // Spring Configuration 임을 명시하는 annotation
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "migrationEntityManagerFactory",
-        transactionManagerRef = "migrationTransactionManager",
         basePackages = { "com.dbmigrator.DBMigrator.domain.migration" }// Postgres 가 매핑할 Entity 가 있는 패키지 위치
 )
 @ComponentScan(basePackages = {"com.dbmigrator.DBMigrator.domain.migration"})
@@ -55,20 +49,4 @@ public class MigrationDBConfig {
 
         return new HikariDataSource(hikariConfig);
     }
-
-    @Bean(name = "migrationEntityManagerFactory")
-    public LocalContainerEntityManagerFactoryBean migrationEntityManagerFactory(EntityManagerFactoryBuilder builder,
-                                                                                @Qualifier("migrationDataSource") DataSource migrationDataSource) {
-        return builder
-                .dataSource(migrationDataSource)
-                .packages("com.dbmigrator.DBMigrator.domain.migration")
-                .build();
-    }
-
-    @Bean(name = "migrationTransactionManager")
-    public PlatformTransactionManager migrationTransactionManager(
-            @Qualifier("migrationEntityManagerFactory") EntityManagerFactory migrationEntityManagerFactory) {
-        return new JpaTransactionManager(migrationEntityManagerFactory);
-    }
-
 }

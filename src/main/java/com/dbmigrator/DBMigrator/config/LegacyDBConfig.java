@@ -39,17 +39,11 @@ public class LegacyDBConfig {
         MongoClientSettings.Builder clientSettingsBuilder = MongoClientSettings.builder()
                 .applyToSocketSettings(builder -> {
                     // Timeout Configurations
-                    builder.connectTimeout(1000, TimeUnit.MILLISECONDS);
-                    builder.readTimeout(1000, TimeUnit.MILLISECONDS);
+                    builder.connectTimeout(0, TimeUnit.MILLISECONDS);
+                    builder.readTimeout(0, TimeUnit.MILLISECONDS);
                 })
                 .applyConnectionString(new ConnectionString("mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/?authSource=admin"));
 
         return MongoClients.create(clientSettingsBuilder.build());
     }
-
-    @Bean
-    public MongoTemplate mongoTemplate() {
-        return new MongoTemplate(mongoClient(), legacyDBBasePackage);
-    }
-
 }
