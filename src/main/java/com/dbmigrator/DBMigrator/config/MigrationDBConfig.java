@@ -1,66 +1,74 @@
 package com.dbmigrator.DBMigrator.config;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
-import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
 
-@Configuration
+@Configuration // Spring Configuration 임을 명시하는 annotation
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "migrationEntityManager",
+        entityManagerFactoryRef = "migrationEntityManagerFactory",
         transactionManagerRef = "migrationTransactionManager",
-        basePackages = "com.dbmigrater.DBMigrater.domain.migration"
+        basePackages = { "com.dbmigrator.DBMigrator.domain.migration" }// Postgres 가 매핑할 Entity 가 있는 패키지 위치
 )
+@ComponentScan(basePackages = {"com.dbmigrator.DBMigrator.domain.migration"})
 public class MigrationDBConfig {
-    @Bean
-    @Primary
-    @ConfigurationProperties(prefix = "spring.datasource")
-    public DataSource migrationDataSource() {
-        return DataSourceBuilder.create().build();
+    @Value("${spring.postgres.host}")
+    private String migrationDBHost;
+
+    @Value("${spring.postgres.port}")
+    private String migrationDBPort;
+
+    @Value("${spring.postgres.dbname}")
+    private String migrationDBName;
+
+    @Value("${spring.postgres.dbschema}")
+    private String migrationDBSchema;
+
+    @Value("${spring.postgres.username}")
+    private String migrationDBUsername;
+
+    @Value("${spring.postgres.password}")
+    private String migrationDBPassword;
+
+    @Bean(name = "migrationDataSource")
+    public HikariDataSource migrationDataSource() {
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setDriverClassName("org.postgresql.Driver");
+        hikariConfig.setJdbcUrl("jdbc:postgresql://" + migrationDBHost + ":" + migrationDBPort + "/" + migrationDBName + "?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true");
+        hikariConfig.setUsername(migrationDBUsername);
+        hikariConfig.setPassword(migrationDBPassword);
+        hikariConfig.setSchema(migrationDBSchema);
+
+        return new HikariDataSource(hikariConfig);
     }
 
-    @Bean
-    @Primary
-    public PlatformTransactionManager migrationTransactionManager() {
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(migrationEntityManager().getObject());
-
-        return transactionManager;
+    @Bean(name = "migrationEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean migrationEntityManagerFactory(EntityManagerFactoryBuilder builder,
+                                                                                @Qualifier("migrationDataSource") DataSource migrationDataSource) {
+        return builder
+                .dataSource(migrationDataSource)
+                .packages("com.dbmigrator.DBMigrator.domain.migration")
+                .build();
     }
 
-    @Bean
-    @Primary
-    public LocalContainerEntityManagerFactoryBean migrationEntityManager() {
-        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(migrationDataSource());
-        em.setPackagesToScan("com.dbmigrater.DBMigrater.domain.migration");
-
-        HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
-        em.setJpaVendorAdapter(adapter);
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.physical_naming_strategy", SpringPhysicalNamingStrategy.class.getName());
-        properties.put("hibernate.implicit_naming_strategy", SpringImplicitNamingStrategy.class.getName());
-        properties.put("hibernate.dialect", PostgreSQL82Dialect.class.getName());
-
-        em.setJpaPropertyMap(properties);
-
-        return em;
+    @Bean(name = "migrationTransactionManager")
+    public PlatformTransactionManager migrationTransactionManager(
+            @Qualifier("migrationEntityManagerFactory") EntityManagerFactory migrationEntityManagerFactory) {
+        return new JpaTransactionManager(migrationEntityManagerFactory);
     }
+
 }

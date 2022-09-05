@@ -1,62 +1,55 @@
 package com.dbmigrator.DBMigrator.config;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
-import org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import javax.sql.DataSource;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
-@EnableTransactionManagement
-@EnableJpaRepositories(
-        entityManagerFactoryRef = "legacyEntityManager",
-        transactionManagerRef = "legacyTransactionManager",
-        basePackages = "com.dbmigrater.DBMigrater.repository.legacy"
+@EnableMongoRepositories(
+        basePackages = {"com.dbmigrator.DBMigrator.domain.legacy"} // MongoDB가 매핑할 Entity 가 있는 패키지 위치
 )
+@ComponentScan(basePackages = {"com.dbmigrator.DBMigrator.domain.legacy"})
 public class LegacyDBConfig {
+    @Value("${spring.mongodb.host}")
+    private String legacyDBHost;
+
+    @Value("${spring.mongodb.port}")
+    private String legacyDBPort;
+
+    @Value("${spring.mongodb.base-package}")
+    private String legacyDBBasePackage;
+
+    @Value("${spring.mongodb.username}")
+    private String legacyDBUsername;
+
+    @Value("${spring.mongodb.password}")
+    private String legacyDBPassword;
+
     @Bean
-    @ConfigurationProperties("spring.datasource.legacy")
-    public DataSource legacyDataSource() {
-        return DataSourceBuilder.create().build();
+    public MongoClient mongoClient() {
+        MongoClientSettings.Builder clientSettingsBuilder = MongoClientSettings.builder()
+                .applyToSocketSettings(builder -> {
+                    // Timeout Configurations
+                    builder.connectTimeout(1000, TimeUnit.MILLISECONDS);
+                    builder.readTimeout(1000, TimeUnit.MILLISECONDS);
+                })
+                .applyConnectionString(new ConnectionString("mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/?authSource=admin"));
+
+        return MongoClients.create(clientSettingsBuilder.build());
     }
 
     @Bean
-    public PlatformTransactionManager legacyTransactionManager() {
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(legacyEntityManager().getObject());
-
-        return transactionManager;
+    public MongoTemplate mongoTemplate() {
+        return new MongoTemplate(mongoClient(), legacyDBBasePackage);
     }
 
-    @Bean
-    public LocalContainerEntityManagerFactoryBean legacyEntityManager() {
-        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(legacyDataSource());
-        em.setPackagesToScan("com.dbmigrater.entity.legacy");
-
-        HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
-        em.setJpaVendorAdapter(adapter);
-
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.physical_naming_strategy", SpringPhysicalNamingStrategy.class.getName());
-        properties.put("hibernate.implicit_naming_strategy", SpringImplicitNamingStrategy.class.getName());
-        properties.put("hibernate.dialect", PostgreSQL82Dialect.class.getName());
-
-        em.setJpaPropertyMap(properties);
-
-        return em;
-    }
 }

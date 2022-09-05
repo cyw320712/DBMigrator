@@ -1,28 +1,40 @@
-spring.datasource:
-    driver-class-name: org.postgresql.Driver
-    jdbc-url: "jdbc:postgresql://127.0.0.1:5433/testdb"
+spring:
+  mongodb:
+    host: localhost
+    port: 27018
+    base-package: fromdb
     username: root
     password: root
-
-spring.data:
-    mongodb:
-      host: localhost
-      port: 27018
-      username: "root"
-      password: "root"
-      database: "fromdb"
-      authentication-database: admin
-
-spring:
+  postgres:
+    host: localhost
+    port: 5433
+    dbname: todb
+    dbschema: public
+    username: root
+    password: root
   jpa:
     show-sql: true
     hibernate:
       ddl-auto: create
-    database: postgresql
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false
-    generate-ddl: true
-  security:
-    user:
-      name: user
-      password: user
+
+    security:
+      user:
+        name: user
+        password: user
+
+#spring.datasource:
+#    driver-class-name: org.postgresql.Driver
+#    jdbc-url: "jdbc:postgresql://127.0.0.1:5433/testdb"
+#    username: root
+#    password: root
+#
+#spring.data:
+#    mongodb:
+#      host: localhost
+#      port: 27018
+#      username: "root"
+#      password: "root"
+#      database: "fromdb"
+#      authentication-database: admin
+
+
