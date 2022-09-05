@@ -6,8 +6,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
-public class Migrator implements Runnable {
+public class Migrator implements Callable<List<String>> {
     private final List<List<Object>> task;
 
     public Migrator(List<List<Object>> task) {
@@ -15,13 +17,11 @@ public class Migrator implements Runnable {
     }
 
     @Transactional(readOnly = true)
-    public void run() {
-        task.forEach((one) -> {
-            migrate(one);
-        });
+    public List<String> call() {
+        return task.stream().map(this::migrate).collect(Collectors.toList());
     }
 
-    private void migrate(List<Object> target) {
+    private String migrate(List<Object> target) {
         MongoRepository legacyRepository = (MongoRepository) target.get(0);
         JpaRepository migrationRepository = (JpaRepository) target.get(1);
 
@@ -29,13 +29,13 @@ public class Migrator implements Runnable {
             List<BaseLegacyEntity> objects = legacyRepository.findAll();
 
             objects.forEach((object) -> {
-                migrationRepository.save(object.convertAndMigration());
+                migrationRepository.save(object.convert());
             });
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        return;
+        return "Complete";
     }
 }

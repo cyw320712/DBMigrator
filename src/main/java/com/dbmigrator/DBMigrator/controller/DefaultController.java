@@ -12,7 +12,7 @@ public class DefaultController {
     private final MigratorService migratorService;
 
     @GetMapping()
-    public String migrate() {
+    public String migrate() throws InterruptedException {
         return migratorService.migrate();
     }
 
