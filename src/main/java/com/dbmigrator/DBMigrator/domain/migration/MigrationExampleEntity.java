@@ -1,5 +1,6 @@
 package com.dbmigrator.DBMigrator.domain.migration;
 
+import com.dbmigrator.DBMigrator.domain.common.BaseTimeEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,9 +11,9 @@ import javax.persistence.Table;
 
 @NoArgsConstructor
 @Getter
-@Entity
+@Entity(name = "migrationExampleEntity")
 @Table(name = "user", schema = "public")
-public class MigrationExample extends BaseTimeEntity {
+public class MigrationExampleEntity extends BaseTimeEntity {
 
     @Id
     private Long userId;
@@ -26,7 +27,7 @@ public class MigrationExample extends BaseTimeEntity {
     private int coin;
 
     @Builder
-    public MigrationExample(Long userId, String email, String name, String type, int coin){
+    public MigrationExampleEntity(Long userId, String email, String name, String type, int coin){
         super();
 
         this.userId = userId;

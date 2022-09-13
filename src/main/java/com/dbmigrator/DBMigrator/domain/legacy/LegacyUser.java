@@ -1,5 +1,6 @@
 package com.dbmigrator.DBMigrator.domain.legacy;
 
+import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.migration.MigrationUser;
 import lombok.Builder;
 import lombok.Getter;

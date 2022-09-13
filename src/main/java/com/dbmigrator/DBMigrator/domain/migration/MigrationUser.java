@@ -1,5 +1,6 @@
 package com.dbmigrator.DBMigrator.domain.migration;
 
+import com.dbmigrator.DBMigrator.domain.common.BaseTimeEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

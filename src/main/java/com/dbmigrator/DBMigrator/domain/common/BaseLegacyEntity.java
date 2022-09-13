@@ -1,4 +1,4 @@
-package com.dbmigrator.DBMigrator.domain.legacy;
+package com.dbmigrator.DBMigrator.domain.common;
 
 public interface BaseLegacyEntity {
     Object convert();

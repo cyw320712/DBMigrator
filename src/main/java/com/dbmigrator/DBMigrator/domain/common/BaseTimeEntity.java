@@ -1,4 +1,4 @@
-package com.dbmigrator.DBMigrator.domain.migration;
+package com.dbmigrator.DBMigrator.domain.common;
 
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;
