@@ -1,6 +1,9 @@
 package com.dbmigrator.DBMigrator.service;
 
+import com.dbmigrator.DBMigrator.utils.JpaRepositoryFactoryPostProcessor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
@@ -8,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +24,7 @@ public class MigratorService {
 
     private final int threadPoolSize = Runtime.getRuntime().availableProcessors() * 2;
     private final List<List<Object>> taskQueue;
+    private final EntityManager em;
     private ConfigurableApplicationContext currentBeanContext;
 
     public String migrate() throws InterruptedException {
@@ -51,6 +56,11 @@ public class MigratorService {
     }
 
     private void readyMigration() {
+        ConfigurableListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+        JpaRepositoryFactoryPostProcessor jpaRepositoryFactory = new JpaRepositoryFactoryPostProcessor(em);
+
+        jpaRepositoryFactory.postProcessBeanFactory(beanFactory);
 
         String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
 

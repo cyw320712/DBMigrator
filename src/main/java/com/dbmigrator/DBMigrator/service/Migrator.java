@@ -1,6 +1,6 @@
 package com.dbmigrator.DBMigrator.service;
 
-import com.dbmigrator.DBMigrator.domain.legacy.BaseLegacyEntity;
+import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
