@@ -56,7 +56,7 @@ public class MigratorService {
     }
 
     private void readyMigration() {
-        ConfigurableListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
 
         JpaRepositoryFactoryPostProcessor jpaRepositoryFactory = new JpaRepositoryFactoryPostProcessor(em);
 
