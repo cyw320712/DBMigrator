@@ -53,8 +53,9 @@ public class JpaRepositoryFactoryPostProcessor implements BeanFactoryPostProcess
         String repositoryName = className + "Repository";
         EntityType<?> entityClass = findTargetEntityClass(className);
 
-        TypeDescription.Generic genericType = TypeDescription.Generic.Builder
-                .parameterizedType(JpaRepository.class, entityClass.getClass(), Long.class)
+        TypeDescription.Generic genericType = null;
+        genericType = TypeDescription.Generic.Builder
+                .parameterizedType(JpaRepository.class, entityClass.getJavaType(), Long.class)
                 .build();
 
         Loaded<?> generatedClass = new ByteBuddy()
