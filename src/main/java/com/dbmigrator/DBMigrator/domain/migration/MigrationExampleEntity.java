@@ -11,7 +11,7 @@ import javax.persistence.Table;
 
 @NoArgsConstructor
 @Getter
-@Entity(name = "migrationExampleEntity")
+@Entity
 @Table(name = "user", schema = "public")
 public class MigrationExampleEntity extends BaseTimeEntity {
 
