@@ -65,3 +65,106 @@ InitDb 스크립트를 활용하면 LegacyDB에 TestUser를 생성합니다. 이
 
 ![](/src/images/Whole%20diagram.png)
 
+### 1. Entity Creation Rule
+
+먼저 Legacy Entity와 Migration Entity를 생성하는 규칙을 알아봅시다. 일단 Legacy Entity와 Migration Entity를 제대로 만들기만 하면 Entity에 해당하는 Repository는 Migrator가 자동으로 생성해서 Bean에 등록하고, 사용하게 됩니다.
+
+Repository 튜닝은 아직 지원하지 않습니다.
+<br>
+<br>
+
+**Legacy Entity**
+```java
+...
+
+@Getter
+@Document(collection = "User")
+public class LegacyExample implements BaseLegacyEntity {
+
+    @Id
+    private String id;
+
+    @Indexed
+    private Long userId;
+
+    private String email;
+
+    private String name;
+
+    private String type;
+
+    private Date regDate;
+
+    private int coin;
+
+    @Override
+    public Object convert() {
+        MigrationUser migrationUser = new MigrationUser(userId, email, name, type, coin);
+
+        return migrationUser;
+    }
+}
+
+```
+
+위 코드에서 볼 수 있듯, 모든 Legacy Entity는 BaseLegacyEntity의 구현체여야 하며, /domain/legacy 폴더에 위치해야 합니다.
+
+또한, BaseLegacyEntity에 포함된 convert() 메서드를 반드시 구현해줘야 하며, 만약 해당 LegacyEntity에서 MigrationEntity로 수정할 때 바꾸고 싶은 값이 있다면 해당 메서드 내부에서 수정해주시면 됩니다.
+
+ex)
+```java
+public class LegacyExample implements BaseLegacyEntity {
+
+    ...
+
+    @Override
+    public Object convert() {
+        String newName = "converted" + name;
+        int newCoin = coin + 400; // migration으로 인한 서버 정지 보상
+        MigrationUser migrationUser = new MigrationUser(userId, email, newName, type, newCoin);
+        return migrationUser;
+    }
+}
+```
+<br>
+<br>
+
+**Migration**
+```java
+...
+
+@NoArgsConstructor
+@Entity
+@Table(name = "user", schema = "public")
+public class MigrationExample extends BaseTimeEntity {
+
+    @Id
+    private Long userId;
+
+    private String email;
+
+    private String name;
+
+    private String type;
+
+    private int coin;
+
+    @Builder
+    public MigrationExample(Long userId, String email, String name, String type, int coin){
+        super();
+
+        this.userId = userId;
+        this.email = email;
+        this.name = name;
+        this.type = type;
+        this.coin = coin;
+    }
+}
+
+```
+
+Migration Entity는 BaseTimeEntity의 확장이어야 합니다. 또한 Migration Entity에는 반드시 생성자가 있어야 합니다. 생성자는 BaseTimeEntity를 포함해야 합니다. regDate와 modDate가 따로 없을 시 migration하는 날짜가 자동으로 저장되게 됩니다.
+
+이렇게 migration하고자 하는 모든 Entity들에 대해서 legacy와 migration entity를 생성해줍니다. (당연히 사용하실 땐 LegacyExample과 MigrationExample은 삭제하셔야 합니다.)
+
+이후 DB와 연결이 확인되면, localhost:8080으로 접속해 자동으로 migration되는 것을 기다려줍니다.
