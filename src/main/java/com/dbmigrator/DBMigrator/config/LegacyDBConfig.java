@@ -4,11 +4,16 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.util.concurrent.TimeUnit;
@@ -35,15 +40,22 @@ public class LegacyDBConfig {
     private String legacyDBPassword;
 
     @Bean
-    public MongoClient mongoClient() {
-        MongoClientSettings.Builder clientSettingsBuilder = MongoClientSettings.builder()
-                .applyToSocketSettings(builder -> {
-                    // Timeout Configurations
-                    builder.connectTimeout(0, TimeUnit.MILLISECONDS);
-                    builder.readTimeout(0, TimeUnit.MILLISECONDS);
-                })
-                .applyConnectionString(new ConnectionString("mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/?authSource=admin"));
+    public MongoDatabaseFactory mongoDBFactory() {
+        String connectionString = "mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/" + legacyDBBasePackage + "?authSource=admin";
+        return new SimpleMongoClientDatabaseFactory(new ConnectionString(connectionString));
+    }
 
-        return MongoClients.create(clientSettingsBuilder.build());
+    @Bean
+    public MongoMappingContext mongoMappingContext() {
+        return new MongoMappingContext();
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate() {
+        DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDBFactory());
+        MappingMongoConverter mongoConverter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
+        mongoConverter.setTypeMapper(new DefaultMongoTypeMapper());
+
+        return new MongoTemplate(mongoDBFactory(), mongoConverter);
     }
 }
