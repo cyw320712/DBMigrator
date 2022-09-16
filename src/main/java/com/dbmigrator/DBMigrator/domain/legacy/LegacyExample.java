@@ -1,8 +1,7 @@
 package com.dbmigrator.DBMigrator.domain.legacy;
 
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
-import com.dbmigrator.DBMigrator.domain.migration.MigrationUser;
-import lombok.Builder;
+import com.dbmigrator.DBMigrator.domain.migration.MigrationExample;
 import lombok.Getter;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -30,21 +29,9 @@ public class LegacyExample implements BaseLegacyEntity {
 
     private int coin;
 
-
-    @Builder
-    public LegacyExample(String id, Long userId, String email, String name, String type, Date regDate, int coin) {
-        this.id = id;
-        this.userId = userId;
-        this.email = email;
-        this.name = name;
-        this.type = type;
-        this.regDate = regDate;
-        this.coin = coin;
-    }
-
     @Override
     public Object convert() {
-        MigrationUser migrationUser = new MigrationUser(userId, email, name, type, coin);
+        MigrationExample migrationUser = new MigrationExample(userId, email, name, type, coin);
 
         return migrationUser;
     }

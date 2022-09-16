@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Getter
 @Entity
 @Table(name = "user", schema = "public")
-public class MigrationExampleEntity extends BaseTimeEntity {
+public class MigrationExample extends BaseTimeEntity {
 
     @Id
     private Long userId;
@@ -27,7 +27,7 @@ public class MigrationExampleEntity extends BaseTimeEntity {
     private int coin;
 
     @Builder
-    public MigrationExampleEntity(Long userId, String email, String name, String type, int coin){
+    public MigrationExample(Long userId, String email, String name, String type, int coin){
         super();
 
         this.userId = userId;
