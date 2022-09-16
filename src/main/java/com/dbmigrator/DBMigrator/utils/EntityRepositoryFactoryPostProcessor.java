@@ -6,12 +6,19 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType.Loaded;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
+import org.springframework.data.mongodb.core.MongoOperationsExtensionsKt;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
@@ -20,22 +27,53 @@ import java.util.Set;
 
 
 @RequiredArgsConstructor
-public class JpaRepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     private Set<EntityType<?>> entityClassList;
     private final EntityManager em;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         entityClassList = em.getMetamodel().getEntities();
 
-        List<String> jpaEntityDefinitions = entityClassList.stream().map(EntityType::getName).toList();
+        List<String> mongoEntityDefinitions = getLegacyEntityDefinitions();
+        List<String> jpaEntityDefinitions = getMigrationEntityDefinitions();
+
+        mongoEntityDefinitions.forEach((entityDefinition) -> {
+            Class<?> dynamicMongoRepository = createDynamicMongoRepository(entityDefinition);
+
+            registerMongoRepositoryFactoryBean(dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
+        });
 
         jpaEntityDefinitions.forEach((entityDefinition) -> {
             Class<?> dynamicJpaRepository = createDynamicJpaRepository(entityDefinition);
 
             registerJpaRepositoryFactoryBean(dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
         });
+
+        for (String s : beanFactory.getBeanDefinitionNames())
+            System.out.println(s);
+    }
+
+    private List<String> getLegacyEntityDefinitions() {
+        return entityClassList.stream().map(EntityType::getName).filter(name -> name.contains("Legacy")).toList();
+    }
+
+    private List<String> getMigrationEntityDefinitions() {
+        return entityClassList.stream().map(EntityType::getName).filter(name -> name.contains("Migration")).toList();
+    }
+
+    private void registerMongoRepositoryFactoryBean(Class<?> mongoRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
+        String beanName = convertCamelToBeanName(mongoRepositoryClass.getName());
+
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(MongoRepositoryFactoryBean.class)
+                .addConstructorArgValue(mongoRepositoryClass)
+                        .addPropertyValue("mongoOperations", mongoTemplate);
+
+        System.out.println(beanDefinitionBuilder.getBeanDefinition().getBeanClassName());
+
+        defaultListableBeanFactory.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
     private void registerJpaRepositoryFactoryBean(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
@@ -49,12 +87,29 @@ public class JpaRepositoryFactoryPostProcessor implements BeanFactoryPostProcess
         defaultListableBeanFactory.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
+    private Class<?> createDynamicMongoRepository(String className) {
+        String repositoryName = className + "Repository";
+        EntityType<?> entityClass = findTargetEntityClass(className);
+
+        TypeDescription.Generic genericType = TypeDescription.Generic.Builder
+                .parameterizedType(MongoRepository.class, entityClass.getJavaType(), String.class)
+                .build();
+
+        Loaded<?> generatedClass = new ByteBuddy()
+                .makeInterface()
+                .implement(genericType)
+                .name(repositoryName)
+                .make()
+                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
+
+        return generatedClass.getLoaded();
+    }
+
     private Class<?> createDynamicJpaRepository(String className) {
         String repositoryName = className + "Repository";
         EntityType<?> entityClass = findTargetEntityClass(className);
 
-        TypeDescription.Generic genericType = null;
-        genericType = TypeDescription.Generic.Builder
+        TypeDescription.Generic genericType = TypeDescription.Generic.Builder
                 .parameterizedType(JpaRepository.class, entityClass.getJavaType(), Long.class)
                 .build();
 
