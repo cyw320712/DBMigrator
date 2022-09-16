@@ -78,6 +78,7 @@ Repository 튜닝은 아직 지원하지 않습니다.
 ...
 
 @Getter
+@Entity
 @Document(collection = "User")
 public class LegacyExample implements BaseLegacyEntity {
 
@@ -110,6 +111,8 @@ public class LegacyExample implements BaseLegacyEntity {
 위 코드에서 볼 수 있듯, 모든 Legacy Entity는 BaseLegacyEntity의 구현체여야 하며, /domain/legacy 폴더에 위치해야 합니다.
 
 또한, BaseLegacyEntity에 포함된 convert() 메서드를 반드시 구현해줘야 하며, 만약 해당 LegacyEntity에서 MigrationEntity로 수정할 때 바꾸고 싶은 값이 있다면 해당 메서드 내부에서 수정해주시면 됩니다.
+
+주의할 점은 EntityManager에서 인식할 수 있도록 @Entity annotation을 반드시 붙여줘야한다는 것입니다. 이로 인해 Migration DB에 Legacy- Entity가 생기는 문제가 발생 중이며 수정 예정입니다.
 
 ex)
 ```java
