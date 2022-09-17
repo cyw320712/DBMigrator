@@ -1,14 +1,21 @@
 # DB Migrator with Spring Boot
 
-Simple and Fast Mongo to Postgres Migration tool based on Spring-data projects. Just by adding Entities for Legacy DB, Entities are automatically Analyzed, Converted and Saved through Spring ODM and ORM.
+Simple and Fast Mongo to Postgres Migration tool based on Spring-data projects.
 
-It will be evolved into a General Purpose Migration Tool!<br>
-(Actually, migrations for Mongo To any RDBs can still be done with simple modification.)
+**Just by register DB connection information to application.yml, adding Legacy DB Entities and Migration DB Entities, and enter localhost:8080, Migrator Automatically Migrate Legacy DB Data to Migration DB!** 
 
-스프링부트 기반의 간단하고 빠른 MongoDB to Postgres 마이그레이션 툴입니다. Legacy DB의 Entity와 Migration DB의 Entity를 추가해주면, 스프링 ORM과 ODM은 이를 자동으로 분석해서 변환하고, 저장해줍니다.
+Entities are automatically Analyzed, Migrator create Virtual MongoRepository and JpaRepository, and register them to Spring IoC. Spring ODM and ORM read, convert, and save the Legacy Data to Migration DB by using those registered Repository interfaces.
+
+It will be evolved into a General Purpose Migration Tool!
+<br>
+
+스프링부트 기반의 간단하고 빠른 MongoDB to Postgres 마이그레이션 툴입니다.
+
+**DB 연결 값들을 application.yml에 등록, Legacy DB Entity와 Migration DB Entity를 추가하고, localhost:8080에 접속하면 자동으로 Migration 됩니다!**
+
+Migrator는 자동으로 코드를 분석해 각각에 대한 Repository를 생성 및 스프링 IoC에 등록하며, 스프링 ORM과 ODM은 이렇게 생성된 Repository interface를 통해 데이터를 읽어와 변환하고, 저장해줍니다.
 
 이를 점점 발전시켜 범용 마이그레이션 툴로 만드는 것이 목표입니다!
-(사실, 지금도 Mongo To (JPA가 지원하는)대부분의 RDB로의 마이그레이션은 작은 수정으로만으로도 가능합니다!)
 
 ## Contributor
 
@@ -17,63 +24,46 @@ It will be evolved into a General Purpose Migration Tool!<br>
 
 ## Usage
 
-Firstly should understand the Simple Project Structure
+Usage is simple. Just register DB connection information to application.yml, and add entity information to domain/legacy and domain/migration respectively. However, you must follow the rules below for each. 
 
-먼저 간단한 파일 구조를 이해해야 합니다.
+사용법은 간단합니다. 그냥 application.yml에 DB 연결 정보를 등록하고, domain/legacy와 domain/migration에 각각 entity 정보를 추가해주면 됩니다. 다만 각각에 대해서는 아래의 규칙을 따라야 합니다.
 
-java<br>
-&nbsp;├─┬com.dbmigrator.DBMigrator. <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;├─┬config/ <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyDBConfig <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── MigrationDBConfig <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;├─┬controller/ <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── DefaultController <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;├─┬domain/ <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─┬ **legacy/**<br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── BaseLegacyEntity <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyEntity1 <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyEntity2 <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── ...LegacyEntities <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─┬ **migration/** <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── BaseTimeEntity <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── MigrationEntity1 <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── MigrationEntity2 <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── ...MigrationEntities <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;├─┬service/ <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── Migrator <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── MigratorService <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;├──DbMigratorApplication <br>
-&nbsp;│&nbsp;&nbsp;&nbsp;└──**InitDb (Testing DB Script)** <br>
-resources<br>
-&nbsp;└─**application.yml**<br>
+### 1. Register DB Connection information
 
-Nextly, modify application.yml file according to Your Database setting. After that, **Add** the Entity objects of existing DB (Legacy DB) to the domain/legacy directory and **Add** the Entity objects of migration target DB (Migration DB) to the domain/migration DB directory.
+src/main/resources/application.yml을 봅시다.
 
-`WARNING` : I recommend that connect Testdb first, then check that the connection and conversion has no problem using the testing db script before processing.
+```yaml
+spring:
+  mongodb:
+    host: localhost
+    port: 27018
+    base-package: fromdb
+    username: root
+    password: root
+  postgres:
+    host: localhost
+    port: 5433
+    dbname: todb
+    dbschema: public
+    username: root
+    password: root
+  jpa:
+#    show-sql: true
+    hibernate:
+      ddl-auto: create
+```
 
-Activate InitDb scripts, it will create testUserEntity in LegacyDB. By using this, you can check whether each db connection is fine or not. Please check that porting test data is complete.
+해당 yml 파일에서 mongodb는 legacy DB이고, postgres는 Migration DB입니다. 각각에 대해서 Connection 정보를 알맞게 기입해주면, DB Config 파일이 알아서 DB와의 연결 후 필요한 정보들을 bean에 등록합니다.
 
-Below diagram describes entire process simply.
-
-자신의 DB에 맞게 application.yml을 먼저 수정합니다. 이후 기존의 데이터가 있는 DB(Legacy DB)의 Entity 객체들을 Legacy 폴더에 추가하고, 데이터를 전송할 DB(Migration DB)의 Entity 객체를 Migration 폴더에 추가합니다.
-
-`WARNING` : 먼저 Testdb와 연결한 후, testing db script를 활용해 연결이 완료됐음을 확인하고 진행하시는 것을 권장합니다.
-
-InitDb 스크립트를 활용하면 LegacyDB에 TestUser를 생성합니다. 이후, legacyExample과 migrationExample을 활용해 migration db에 포팅된 데이터가 생성되는 것을 확인하실 수 있습니다. 테스트 데이터가 원활히 포팅되는 것을 먼저 확인하고 진행해주시기 바랍니다.
-
-아래 그림은 전체 프로세스를 설명합니다.
-
-![](/src/images/Whole%20diagram.png)
-
-### 1. Entity Creation Rule
+### 2. Entity Creation Rule
 
 먼저 Legacy Entity와 Migration Entity를 생성하는 규칙을 알아봅시다. 일단 Legacy Entity와 Migration Entity를 제대로 만들기만 하면 Entity에 해당하는 Repository는 Migrator가 자동으로 생성해서 Bean에 등록하고, 사용하게 됩니다.
 
-Repository 튜닝은 아직 지원하지 않습니다.
+Repository 튜닝은 아직 지원하지 않습니다. 하지만 utils/EntityRepositoryFactoryPostProcessor를 분석해 ByteBuddy 부분을 수정하면 쉽게 method를 추가할 수 있습니다.
 <br>
 <br>
 
-**Legacy Entity**
+**Legacy Entity Creation Rule**
 ```java
 ...
 
@@ -132,7 +122,7 @@ public class LegacyExample implements BaseLegacyEntity {
 <br>
 <br>
 
-**Migration**
+**Migration Entity Creation Rule**
 ```java
 ...
 
@@ -170,4 +160,60 @@ Migration Entity는 BaseTimeEntity의 확장이어야 합니다. 또한 Migratio
 
 이렇게 migration하고자 하는 모든 Entity들에 대해서 legacy와 migration entity를 생성해줍니다. (당연히 사용하실 땐 LegacyExample과 MigrationExample은 삭제하셔야 합니다.)
 
-이후 DB와 연결이 확인되면, localhost:8080으로 접속해 자동으로 migration되는 것을 기다려줍니다.
+
+### 3. DB Migrator 실행
+
+SpringBoot 앱을 실행해 DB connection이 문제 없이 이루어졌음이 확인되고, Application도 문제 없이 실행된 것을 확인해줍니다. 정상적으로 실행됐다면, http://localhost:8080으로 접속해 자동으로 migration 되는 것을 기다려줍니다.
+
+## Structure
+
+Firstly, it's simple project structure would look like this:
+
+먼저 간단한 프로젝트 구조는 다음과 같습니다:
+
+java<br>
+&nbsp;├─┬com.dbmigrator.DBMigrator. <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├─┬config/ <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyDBConfig <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── MigrationDBConfig <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├─┬controller/ <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── DefaultController <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├─┬domain/ <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─┬ **common/**<br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── BaseLegacyEntity <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── BaseTimeEntity <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├─┬ **legacy/**<br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyEntity1 <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── LegacyEntity2 <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── ...LegacyEntities <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└─┬ **migration/** <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── MigrationEntity1 <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── MigrationEntity2 <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── ...MigrationEntities <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├─┬service/ <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;├── Migrator <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── MigratorService <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├─┬utils/ <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── EntityRepositoryFactoryPostProcessor <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;├──DbMigratorApplication <br>
+&nbsp;│&nbsp;&nbsp;&nbsp;└──**InitDb (Testing DB Script)** <br>
+resources<br>
+&nbsp;└─**application.yml**<br>
+
+Nextly, modify application.yml file according to Your Database setting. After that, **Add** the Entity objects of existing DB (Legacy DB) to the domain/legacy directory and **Add** the Entity objects of migration target DB (Migration DB) to the domain/migration DB directory.
+
+`WARNING` : I recommend that connect Testdb first, then check that the connection and conversion has no problem using the testing db script before processing.
+
+Activate InitDb scripts, it will create testUserEntity in LegacyDB. By using this, you can check whether each db connection is fine or not. Please check that porting test data is complete.
+
+Below diagram describes entire process simply.
+
+자신의 DB에 맞게 application.yml을 먼저 수정합니다. 이후 기존의 데이터가 있는 DB(Legacy DB)의 Entity 객체들을 Legacy 폴더에 추가하고, 데이터를 전송할 DB(Migration DB)의 Entity 객체를 Migration 폴더에 추가합니다.
+
+`WARNING` : 먼저 Testdb와 연결한 후, testing db script를 활용해 연결이 완료됐음을 확인하고 진행하시는 것을 권장합니다.
+
+InitDb 스크립트를 활용하면 LegacyDB에 TestUser를 생성합니다. 이후, legacyExample과 migrationExample을 활용해 migration db에 포팅된 데이터가 생성되는 것을 확인하실 수 있습니다. 테스트 데이터가 원활히 포팅되는 것을 먼저 확인하고 진행해주시기 바랍니다.
+
+아래 그림은 전체 프로세스를 설명합니다.
+
+![](/src/images/Whole%20diagram.png)
