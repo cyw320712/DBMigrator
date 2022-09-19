@@ -69,7 +69,7 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
 
         BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(MongoRepositoryFactoryBean.class)
                 .addConstructorArgValue(mongoRepositoryClass)
-                        .addPropertyValue("mongoOperations", mongoTemplate);
+                .addPropertyValue("mongoOperations", mongoTemplate);
 
         System.out.println(beanDefinitionBuilder.getBeanDefinition().getBeanClassName());
 
@@ -91,16 +91,9 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
         String repositoryName = className + "Repository";
         EntityType<?> entityClass = findTargetEntityClass(className);
 
-        TypeDescription.Generic genericType = TypeDescription.Generic.Builder
-                .parameterizedType(MongoRepository.class, entityClass.getJavaType(), String.class)
-                .build();
+        TypeDescription.Generic genericType = buildRepositoryTypeDescription(MongoRepository.class, entityClass.getJavaType(), String.class);
 
-        Loaded<?> generatedClass = new ByteBuddy()
-                .makeInterface()
-                .implement(genericType)
-                .name(repositoryName)
-                .make()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
+        Loaded<?> generatedClass = dynamicCreateClassAndLoad(repositoryName, genericType);
 
         return generatedClass.getLoaded();
     }
@@ -109,18 +102,26 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
         String repositoryName = className + "Repository";
         EntityType<?> entityClass = findTargetEntityClass(className);
 
-        TypeDescription.Generic genericType = TypeDescription.Generic.Builder
-                .parameterizedType(JpaRepository.class, entityClass.getJavaType(), Long.class)
-                .build();
+        TypeDescription.Generic genericType = buildRepositoryTypeDescription(JpaRepository.class, entityClass.getJavaType(), Long.class);
 
-        Loaded<?> generatedClass = new ByteBuddy()
+        Loaded<?> generatedClass = dynamicCreateClassAndLoad(repositoryName, genericType);
+
+        return generatedClass.getLoaded();
+    }
+
+    private TypeDescription.Generic buildRepositoryTypeDescription(Class<?> repositoryClass, Class<?> entityClass, Class<?> idClass) {
+        return TypeDescription.Generic.Builder
+                .parameterizedType(repositoryClass, entityClass, idClass)
+                .build();
+    }
+
+    private Loaded<?> dynamicCreateClassAndLoad(String repositoryName, TypeDescription.Generic genericType) {
+        return new ByteBuddy()
                 .makeInterface()
                 .implement(genericType)
                 .name(repositoryName)
                 .make()
                 .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION);
-
-        return generatedClass.getLoaded();
     }
 
     private EntityType<?> findTargetEntityClass(String className) {
