@@ -61,17 +61,17 @@ public class MigratorService {
 
     private void readyMigration() {
         ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
-
-        EntityRepositoryFactoryPostProcessor jpaRepositoryFactory = new EntityRepositoryFactoryPostProcessor(em, mongoTemplate);
-
-        jpaRepositoryFactory.postProcessBeanFactory(beanFactory);
-
         String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
+
+        EntityRepositoryFactoryPostProcessor repositoryFactory = new EntityRepositoryFactoryPostProcessor(em, mongoTemplate);
+        repositoryFactory.postProcessBeanFactory(beanFactory);
 
         List<MongoRepository> legacyRepositoryList = getLegacyRepositories(currentBeanDefinitions);
         List<JpaRepository> migratedRepositoryList = getMigrationRepositories(currentBeanDefinitions);
+
         System.out.println(legacyRepositoryList.size());
         System.out.println(migratedRepositoryList.size());
+
         extractTasks(legacyRepositoryList, migratedRepositoryList);
     }
 
