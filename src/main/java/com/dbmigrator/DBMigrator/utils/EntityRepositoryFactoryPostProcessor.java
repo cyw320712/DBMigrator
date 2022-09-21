@@ -36,13 +36,13 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
         List<String> jpaEntityDefinitions = getMigrationEntityDefinitions();
 
         mongoEntityDefinitions.forEach((entityDefinition) -> {
-            Class<?> dynamicMongoRepository = createDynamicMongoRepository(entityDefinition);
+            Class<?> dynamicMongoRepository = createDynamicRepository(entityDefinition, MongoRepository.class);
 
             registerMongoRepositoryFactoryBean(dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
         });
 
         jpaEntityDefinitions.forEach((entityDefinition) -> {
-            Class<?> dynamicJpaRepository = createDynamicJpaRepository(entityDefinition);
+            Class<?> dynamicJpaRepository = createDynamicRepository(entityDefinition, JpaRepository.class);
 
             registerJpaRepositoryFactoryBean(dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
         });
@@ -73,23 +73,13 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
         defaultListableBeanFactory.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
-    private Class<?> createDynamicMongoRepository(String entityName) {
+    private Class<?> createDynamicRepository(String entityName, Class<?> repositoryClass) {
         String repositoryName = entityName + "Repository";
-        EntityType<?> entityClass = findTargetEntityClass(entityName);
 
-        TypeDescription.Generic genericType = buildRepositoryTypeDescription(MongoRepository.class, entityClass.getJavaType(), String.class);
+        Class<?> entityClass = findTargetEntityClass(entityName);
+        Class<?> idClass = getIdClass(repositoryClass);
 
-        Loaded<?> generatedClass = dynamicCreateClassAndLoad(repositoryName, genericType);
-
-        return generatedClass.getLoaded();
-    }
-
-    private Class<?> createDynamicJpaRepository(String entityName) {
-        String repositoryName = entityName + "Repository";
-        EntityType<?> entityClass = findTargetEntityClass(entityName);
-
-        TypeDescription.Generic genericType = buildRepositoryTypeDescription(JpaRepository.class, entityClass.getJavaType(), Long.class);
-
+        TypeDescription.Generic genericType = buildRepositoryTypeDescription(repositoryClass, entityClass, idClass);
         Loaded<?> generatedClass = dynamicCreateClassAndLoad(repositoryName, genericType);
 
         return generatedClass.getLoaded();
@@ -111,14 +101,20 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
     }
 
     private List<String> getLegacyEntityDefinitions() {
-        return entityClassList.stream().map(EntityType::getName).filter(name -> name.contains("Legacy")).toList();
+        return entityClassList.stream()
+                .map(EntityType::getName)
+                .filter(name -> name.contains("Legacy"))
+                .toList();
     }
 
     private List<String> getMigrationEntityDefinitions() {
-        return entityClassList.stream().map(EntityType::getName).filter(name -> name.contains("Migration")).toList();
+        return entityClassList.stream()
+                .map(EntityType::getName)
+                .filter(name -> name.contains("Migration"))
+                .toList();
     }
 
-    private EntityType<?> findTargetEntityClass(String entityName) {
+    private Class<?> findTargetEntityClass(String entityName) {
         EntityType<?> entityClass = null;
 
         for (EntityType<?> e : entityClassList) {
@@ -130,7 +126,11 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
             throw new IllegalStateException("Entity does not exist");
         }
 
-        return entityClass;
+        return entityClass.getJavaType();
+    }
+
+    private Class<?> getIdClass(Class<?> repositoryClass) {
+        return repositoryClass == JpaRepository.class ? Long.class : String.class;
     }
 
     private String convertCamelToBeanName(String camelName) {
