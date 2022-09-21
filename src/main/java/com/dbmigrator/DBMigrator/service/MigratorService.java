@@ -2,13 +2,11 @@ package com.dbmigrator.DBMigrator.service;
 
 import com.dbmigrator.DBMigrator.utils.EntityRepositoryFactoryPostProcessor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +25,6 @@ public class MigratorService {
     private final List<List<Object>> taskQueue;
     private final EntityManager em;
     private ConfigurableApplicationContext currentBeanContext;
-
-    @Autowired
-    private MongoTemplate mongoTemplate;
 
     public String migrate() throws InterruptedException {
         readyMigration();
@@ -61,10 +56,11 @@ public class MigratorService {
 
     private void readyMigration() {
         ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
-        String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
 
-        EntityRepositoryFactoryPostProcessor repositoryFactory = new EntityRepositoryFactoryPostProcessor(em, mongoTemplate);
+        EntityRepositoryFactoryPostProcessor repositoryFactory = new EntityRepositoryFactoryPostProcessor(em);
         repositoryFactory.postProcessBeanFactory(beanFactory);
+
+        String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
 
         List<MongoRepository> legacyRepositoryList = getLegacyRepositories(currentBeanDefinitions);
         List<JpaRepository> migratedRepositoryList = getMigrationRepositories(currentBeanDefinitions);
@@ -91,12 +87,12 @@ public class MigratorService {
                 .collect(Collectors.toList());
     }
 
-    private List<String> getTargetRepositoryNameList(String[] currentBeanDefinitions, String legacy) {
-        return Arrays.stream(currentBeanDefinitions).filter(ob -> isTargetRepository(ob, legacy)).toList();
+    private List<String> getTargetRepositoryNameList(String[] currentBeanDefinitions, String repositoryType) {
+        return Arrays.stream(currentBeanDefinitions).filter(ob -> isTargetRepository(ob, repositoryType)).toList();
     }
 
-    private boolean isTargetRepository(String ob, String state) {
-        return ob.contains("Repository") && ob.contains(state);
+    private boolean isTargetRepository(String ob, String repositoryType) {
+        return ob.contains("Repository") && ob.contains(repositoryType);
     }
 
     private void extractTasks(List<MongoRepository> legacyRepositoryList, List<JpaRepository> migratedRepositoryList) {

@@ -27,7 +27,6 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
 
     private Set<EntityType<?>> entityClassList;
     private final EntityManager em;
-    private final MongoTemplate mongoTemplate;
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -47,13 +46,12 @@ public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProc
 
             registerJpaRepositoryFactoryBean(dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
         });
-
-        for (String s : beanFactory.getBeanDefinitionNames())
-            System.out.println(s);
     }
 
     private void registerMongoRepositoryFactoryBean(Class<?> mongoRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
         String beanName = convertCamelToBeanName(mongoRepositoryClass.getName());
+
+        MongoTemplate mongoTemplate = defaultListableBeanFactory.getBean(MongoTemplate.class);
 
         BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(MongoRepositoryFactoryBean.class)
                 .addConstructorArgValue(mongoRepositoryClass)
