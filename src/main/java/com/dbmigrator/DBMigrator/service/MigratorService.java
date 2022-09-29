@@ -1,6 +1,6 @@
 package com.dbmigrator.DBMigrator.service;
 
-import com.dbmigrator.DBMigrator.utils.EntityRepositoryFactoryPostProcessor;
+import com.dbmigrator.DBMigrator.utils.RepositoryFactoryPostProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -57,7 +57,7 @@ public class MigratorService {
     private void readyMigration() {
         ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
 
-        EntityRepositoryFactoryPostProcessor repositoryFactory = new EntityRepositoryFactoryPostProcessor(em);
+        RepositoryFactoryPostProcessor repositoryFactory = new RepositoryFactoryPostProcessor(em);
         repositoryFactory.postProcessBeanFactory(beanFactory);
 
         String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();

@@ -23,7 +23,7 @@ import java.util.Set;
 
 
 @RequiredArgsConstructor
-public class EntityRepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     private Set<EntityType<?>> entityClassList;
     private final EntityManager em;
