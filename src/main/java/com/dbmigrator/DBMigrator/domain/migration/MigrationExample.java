@@ -1,6 +1,6 @@
 package com.dbmigrator.DBMigrator.domain.migration;
 
-import com.dbmigrator.DBMigrator.domain.common.BaseTimeEntity;
+import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import javax.persistence.Table;
 @Getter
 @Entity
 @Table(name = "user", schema = "public")
-public class MigrationExample extends BaseTimeEntity {
+public class MigrationExample extends BaseMigrationEntity {
 
     @Id
     private Long userId;

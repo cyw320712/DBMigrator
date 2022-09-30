@@ -12,7 +12,7 @@ import java.util.Date;
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseTimeEntity {
+public abstract class BaseMigrationEntity {
     @CreatedDate
     private Date regDate;
 
