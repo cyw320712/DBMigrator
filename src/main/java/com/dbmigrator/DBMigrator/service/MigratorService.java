@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
 import java.util.*;
 import static java.util.stream.Collectors.toMap;
 
@@ -35,22 +36,32 @@ public class MigratorService {
                         e -> (JpaRepository) migrationRepositoryManager.get(e.getKey()))
                 );
 
-        taskQueue.entrySet()
-                .forEach(entry -> {
+        long beforeTime = System.currentTimeMillis();
+        List<Boolean> resultList = taskQueue.entrySet().parallelStream()
+                .map(entry -> {
                     MongoRepository legacyRepository = entry.getKey();
                     JpaRepository migrationRepository = entry.getValue();
                     List<BaseLegacyEntity> legacyEntities = legacyRepository.findAll();
-                    List<BaseMigrationEntity> migrationEntities = legacyEntities.stream().map(BaseLegacyEntity::convert).toList();
+                    List<BaseMigrationEntity> migrationEntities = legacyEntities.stream()
+                            .map(BaseLegacyEntity::convert).toList();
                     migrationRepository.saveAll(migrationEntities);
-                });
-        
+                    legacyEntities = null;
+                    migrationEntities = null;
+                    return true;
+                })
+                .toList();
+        // Progress 상태를 모니터링할 때 사용하기 위해 resultList에 상태 담아주기
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+        System.out.println("시간차이(m) : "+secDiffTime);
         return "Complete";
     }
 
     private void readyMigration() {
         ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
+        Set<EntityType<?>> entityList = em.getMetamodel().getEntities();
 
-        RepositoryFactoryPostProcessor repositoryFactory = new RepositoryFactoryPostProcessor(em);
+        RepositoryFactoryPostProcessor repositoryFactory = new RepositoryFactoryPostProcessor(entityList);
         repositoryFactory.postProcessBeanFactory(beanFactory);
 
         String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();

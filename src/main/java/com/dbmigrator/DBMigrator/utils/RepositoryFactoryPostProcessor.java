@@ -1,5 +1,6 @@
 package com.dbmigrator.DBMigrator.utils;
 
+import com.mongodb.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
@@ -15,8 +16,8 @@ import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
+import org.springframework.data.repository.Repository;
 
-import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Set;
@@ -25,13 +26,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
 
-    private Set<EntityType<?>> entityClassList;
-    private final EntityManager em;
+    // 주입받은 EntityClassList 에 대해서 처리하기
+    private final Set<EntityType<?>> entityClassList;
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        entityClassList = em.getMetamodel().getEntities();
-
         List<String> mongoEntityDefinitions = getLegacyEntityDefinitions();
         List<String> jpaEntityDefinitions = getMigrationEntityDefinitions();
 
