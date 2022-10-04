@@ -13,7 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "post", schema = "public")
+@Table(name = "post")
 public class MigrationPostExample extends BaseMigrationEntity {
     public MigrationPostExample(Long postId, Long userId, Long menuId, String title, String content, Integer view, Date regDate, Date modDate) {
         super(regDate, modDate);

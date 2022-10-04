@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "follow", schema = "public")
+@Table(name = "follow")
 public class MigrationFollowExample extends BaseMigrationEntity {
     @Id
     private Long followId;
