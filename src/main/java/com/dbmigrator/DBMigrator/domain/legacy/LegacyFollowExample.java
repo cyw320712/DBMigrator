@@ -2,8 +2,9 @@ package com.dbmigrator.DBMigrator.domain.legacy;
 
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
-import com.dbmigrator.DBMigrator.domain.migration.MigrationExample;
+import com.dbmigrator.DBMigrator.domain.migration.MigrationFollowExample;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,31 +12,28 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.Date;
 
+@NoArgsConstructor
 @Getter
-@Entity()
-@Document(collection = "User")
-public class LegacyExample implements BaseLegacyEntity {
-
+@Entity
+@Document(collection = "Follow")
+public class LegacyFollowExample implements BaseLegacyEntity {
     @Id
     private String id;
 
     @Indexed
-    private Long userId;
+    private Long followId;
 
-    private String email;
+    private Long followerId;
 
-    private String name;
-
-    private String type;
+    private Long followingId;
 
     private Date regDate;
 
-    private int coin;
+    private Date modDate;
+
 
     @Override
-    public BaseMigrationEntity convert() {
-        MigrationExample migrationUser = new MigrationExample(userId, email, name, type, coin);
-
-        return migrationUser;
+    public MigrationFollowExample convert() {
+        return new MigrationFollowExample(regDate, modDate, followId, followerId, followingId);
     }
 }
