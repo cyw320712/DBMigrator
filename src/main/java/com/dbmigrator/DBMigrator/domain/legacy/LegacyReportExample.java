@@ -1,8 +1,7 @@
 package com.dbmigrator.DBMigrator.domain.legacy;
 
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
-import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
-import com.dbmigrator.DBMigrator.domain.migration.MigrationFollowExample;
+import com.dbmigrator.DBMigrator.domain.migration.MigrationReportExample;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -15,17 +14,25 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Document(collection = "Follow")
-public class LegacyFollowExample implements BaseLegacyEntity {
+@Document(collection = "Report")
+public class LegacyReportExample implements BaseLegacyEntity {
     @Id
     private String id;
 
     @Indexed
-    private Long followId;
+    private Long reportId;
 
-    private Long followerId;
+    private Long reporterId;
 
-    private Long followingId;
+    private Long targetId;
+
+    private Long postId;
+
+    private String title;
+
+    private String type;
+
+    private String content;
 
     private Date regDate;
 
@@ -33,7 +40,7 @@ public class LegacyFollowExample implements BaseLegacyEntity {
 
 
     @Override
-    public MigrationFollowExample convert() {
-        return new MigrationFollowExample(regDate, modDate, followId, followerId, followingId);
+    public MigrationReportExample convert() {
+        return new MigrationReportExample(regDate, modDate, reportId, reporterId, targetId, postId, title, type, content);
     }
 }
