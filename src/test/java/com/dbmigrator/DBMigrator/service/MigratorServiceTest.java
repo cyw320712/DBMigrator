@@ -45,12 +45,13 @@ class MigratorServiceTest {
         List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class);
 
         //when
-        migratorService.readyMigration(targetEntityList);
-        List<Progress> result = migratorService.migrate(targetEntityList);
+        migratorService.readyPartialMigration(targetEntityList);
+        List<Progress> result = migratorService.partialMigrate(targetEntityList);
 
         //then
         List<Progress> answer = new ArrayList<Progress>();
-        answer.add(new Progress(true, dummyUsers.size()));
+        for (int i=0; i<result.size(); i++)
+            answer.add(new Progress(true));
         assertEquals(result, answer);
     }
 
@@ -81,17 +82,14 @@ class MigratorServiceTest {
 
         // when
         // 대상 EntityList에 대해서 Migration 준비
-        migratorService.readyMigration(targetEntityList);
+        migratorService.readyPartialMigration(targetEntityList);
         // 받아온 Progress 객체를 result 에 저장하기
-        List<Progress> result = migratorService.migrate(targetEntityList);
+        List<Progress> result = migratorService.partialMigrate(targetEntityList);
 
         // then
         List<Progress> answer = new ArrayList<Progress>();
-        answer.add(new Progress(true, dummyUsers.size()));
-        answer.add(new Progress(true, dummyPosts.size()));
-        answer.add(new Progress(true, dummyComments.size()));
-        answer.add(new Progress(true, dummyMenus.size()));
-        answer.add(new Progress(true, dummyReports.size()));
+        for (int i=0; i<result.size(); i++)
+            answer.add(new Progress(true));
         assertEquals(result, answer);
         // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
@@ -122,17 +120,14 @@ class MigratorServiceTest {
 
         // when
         // 대상 EntityList에 대해서 Migration 준비
-        migratorService.readyMigration(targetEntityList);
+        migratorService.readyPartialMigration(targetEntityList);
         // 받아온 Progress 객체를 result 에 저장하기
-        List<Progress> result = migratorService.migrate(targetEntityList);
+        List<Progress> result = migratorService.partialMigrate(targetEntityList);
 
         // then
         List<Progress> answer = new ArrayList<Progress>();
-        answer.add(new Progress(true, dummyUsers.size()));
-        answer.add(new Progress(true, dummyPosts.size()));
-        answer.add(new Progress(true, dummyComments.size()));
-        answer.add(new Progress(true, dummyMenus.size()));
-        answer.add(new Progress(true, dummyReports.size()));
+        for (int i=0; i<result.size(); i++)
+            answer.add(new Progress(true));
         assertEquals(result, answer);
         // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
