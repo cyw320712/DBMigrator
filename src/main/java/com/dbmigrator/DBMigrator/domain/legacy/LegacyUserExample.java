@@ -38,4 +38,14 @@ public class LegacyUserExample implements BaseLegacyEntity {
 
         return migrationUser;
     }
+
+    public LegacyUserExample(String id, Long userId, String email, String name, String type, Date regDate, int coin) {
+        this.id = id;
+        this.userId = userId;
+        this.email = email;
+        this.name = name;
+        this.type = type;
+        this.regDate = regDate;
+        this.coin = coin;
+    }
 }

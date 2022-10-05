@@ -39,4 +39,16 @@ public class LegacyPostExample implements BaseLegacyEntity {
     public MigrationPostExample convert() {
         return new MigrationPostExample(postId, userId, menuId, title, content, view, regDate, modDate);
     }
+
+    public LegacyPostExample(String id, Long postId, Long userId, Long menuId, String title, String content, Integer view, Date regDate, Date modDate) {
+        this.id = id;
+        this.postId = postId;
+        this.userId = userId;
+        this.menuId = menuId;
+        this.title = title;
+        this.content = content;
+        this.view = view;
+        this.regDate = regDate;
+        this.modDate = modDate;
+    }
 }

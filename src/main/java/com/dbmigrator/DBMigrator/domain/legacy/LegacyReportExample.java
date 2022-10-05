@@ -43,4 +43,17 @@ public class LegacyReportExample implements BaseLegacyEntity {
     public MigrationReportExample convert() {
         return new MigrationReportExample(regDate, modDate, reportId, reporterId, targetId, postId, title, type, content);
     }
+
+    public LegacyReportExample(String id, Long reportId, Long reporterId, Long targetId, Long postId, String title, String type, String content, Date regDate, Date modDate) {
+        this.id = id;
+        this.reportId = reportId;
+        this.reporterId = reporterId;
+        this.targetId = targetId;
+        this.postId = postId;
+        this.title = title;
+        this.type = type;
+        this.content = content;
+        this.regDate = regDate;
+        this.modDate = modDate;
+    }
 }

@@ -37,4 +37,15 @@ public class LegacyCommentExample implements BaseLegacyEntity {
     public MigrationCommentExample convert() {
         return new MigrationCommentExample(regDate, modDate, commentId, postId, userId, like, comment);
     }
+
+    public LegacyCommentExample(String id, Long commentId, Long postId, Long userId, Integer like, String comment, Date regDate, Date modDate) {
+        this.id = id;
+        this.commentId = commentId;
+        this.postId = postId;
+        this.userId = userId;
+        this.like = like;
+        this.comment = comment;
+        this.regDate = regDate;
+        this.modDate = modDate;
+    }
 }

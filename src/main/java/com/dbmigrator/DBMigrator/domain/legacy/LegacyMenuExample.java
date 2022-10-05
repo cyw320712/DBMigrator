@@ -36,4 +36,14 @@ public class LegacyMenuExample implements BaseLegacyEntity {
     public MigrationMenuExample convert() {
         return new MigrationMenuExample(regDate, modDate, menuId, title, order, userId);
     }
+
+    public LegacyMenuExample(String id, Long menuId, String title, Integer order, Long userId, Date regDate, Date modDate) {
+        this.id = id;
+        this.menuId = menuId;
+        this.title = title;
+        this.order = order;
+        this.userId = userId;
+        this.regDate = regDate;
+        this.modDate = modDate;
+    }
 }
