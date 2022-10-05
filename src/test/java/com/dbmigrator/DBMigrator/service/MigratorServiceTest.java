@@ -1,23 +1,19 @@
 package com.dbmigrator.DBMigrator.service;
 
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
-import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
-import com.dbmigrator.DBMigrator.utils.RepositoryFactoryPostProcessor;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
+import com.dbmigrator.DBMigrator.domain.legacy.*;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,90 +24,217 @@ class MigratorServiceTest {
     @Autowired MigratorService migratorService;
     @Autowired
     EntityManager em;
+    @Autowired
+    ConfigurableApplicationContext currentBeanContext;
+    HashMap<String, MongoRepository> legacyRepositoryManager;
+    HashMap<String, JpaRepository> migrationRepositoryManager;
+
+    @BeforeAll()
+    private void setRepositoryManagers() {
+        legacyRepositoryManager = migratorService.getLegacyRepositoryManager();
+        migrationRepositoryManager = migratorService.getMigrationRepositoryManager();
+    }
 
     @Test
-    public void lightMigrate() throws Exception {
+    public void singleMigration() throws Exception {
         //given
-        // Entity 생성 (10 ~ 20 종류)
-        // EntityManager에 등록하기
-        // Entity 당 1000개씩 더미 데이터 생성
-        for (int i = 0; i < 20; i++) {
-            Map<Class, Class> dummyEntitySet = createDummyEntitySet(i);
-        }
-        // Repository를 사용해 저장하기
+        int light = 1000;
+        List<LegacyUserExample> dummyUsers = createDummyUser(light);
+        MongoRepository legacyUserRepository = legacyRepositoryManager.get("User");
+        legacyUserRepository.saveAll(dummyUsers);
+        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class);
 
         //when
-        // migrate 호출
-        // 받아온 Progress 객체를 result로 저장하기
+        migratorService.readyMigration(targetEntityList);
+        List<Progress> result = migratorService.migrate(targetEntityList);
 
         //then
-        Set<EntityType<?>> result = em.getMetamodel().getEntities();
-        result.stream().forEach(entity -> {
-            System.out.println(entity.getName());
-        });
-        assertTrue(true);
-        // assertEqual(result, new Progress(Entity));
+        List<Progress> answer = new ArrayList<Progress>();
+        answer.add(new Progress(true, dummyUsers.size()));
+        assertEquals(result, answer);
+    }
+
+    @Test
+    public void lightMigrate() {
+        // given
+        int light = 1000;
+        // Entity 당 1000개씩 더미 데이터 생성
+        List<LegacyUserExample> dummyUsers = createDummyUser(light);
+        List<LegacyPostExample> dummyPosts = createDummyPost(light);
+        List<LegacyCommentExample> dummyComments = createDummyComment(light);
+        List<LegacyMenuExample> dummyMenus = createDummyMenu(light);
+        List<LegacyReportExample> dummyReports = createDummyReport(light);
+        // Repository 가져오기
+        MongoRepository legacyUserRepository = legacyRepositoryManager.get("User");
+        MongoRepository legacyPostRepository = legacyRepositoryManager.get("Post");
+        MongoRepository legacyCommentRepository = legacyRepositoryManager.get("Comment");
+        MongoRepository legacyMenuRepository = legacyRepositoryManager.get("Menu");
+        MongoRepository legacyReportRepository = legacyRepositoryManager.get("Report");
+        // Repository를 사용해 저장
+        legacyUserRepository.saveAll(dummyUsers);
+        legacyPostRepository.saveAll(dummyPosts);
+        legacyCommentRepository.saveAll(dummyComments);
+        legacyMenuRepository.saveAll(dummyMenus);
+        legacyReportRepository.saveAll(dummyReports);
+
+        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class, LegacyPostExample.class, LegacyCommentExample.class, LegacyMenuExample.class, LegacyReportExample.class);
+
+        // when
+        // 대상 EntityList에 대해서 Migration 준비
+        migratorService.readyMigration(targetEntityList);
+        // 받아온 Progress 객체를 result 에 저장하기
+        List<Progress> result = migratorService.migrate(targetEntityList);
+
+        // then
+        List<Progress> answer = new ArrayList<Progress>();
+        answer.add(new Progress(true, dummyUsers.size()));
+        answer.add(new Progress(true, dummyPosts.size()));
+        answer.add(new Progress(true, dummyComments.size()));
+        answer.add(new Progress(true, dummyMenus.size()));
+        answer.add(new Progress(true, dummyReports.size()));
+        assertEquals(result, answer);
         // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
 
     @Test
     public void heavyMigrate() throws Exception {
-        //given
-        // Entity 생성 (100 ~ 120 종류)
-        // EntityManager에 등록하기
-        // Entity 당 1만개씩 더미 데이터 생성
+        int heavy = 100000;
+        // Entity 당 100000개씩 더미 데이터 생성
+        List<LegacyUserExample> dummyUsers = createDummyUser(heavy);
+        List<LegacyPostExample> dummyPosts = createDummyPost(heavy);
+        List<LegacyCommentExample> dummyComments = createDummyComment(heavy);
+        List<LegacyMenuExample> dummyMenus = createDummyMenu(heavy);
+        List<LegacyReportExample> dummyReports = createDummyReport(heavy);
+        // Repository 가져오기
+        MongoRepository legacyUserRepository = legacyRepositoryManager.get("User");
+        MongoRepository legacyPostRepository = legacyRepositoryManager.get("Post");
+        MongoRepository legacyCommentRepository = legacyRepositoryManager.get("Comment");
+        MongoRepository legacyMenuRepository = legacyRepositoryManager.get("Menu");
+        MongoRepository legacyReportRepository = legacyRepositoryManager.get("Report");
+        // Repository를 사용해 저장
+        legacyUserRepository.saveAll(dummyUsers);
+        legacyPostRepository.saveAll(dummyPosts);
+        legacyCommentRepository.saveAll(dummyComments);
+        legacyMenuRepository.saveAll(dummyMenus);
+        legacyReportRepository.saveAll(dummyReports);
 
-        //when
-        // migrate 호출
-        // 받아온 Progress 객체를 result로 저장하기
+        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class, LegacyPostExample.class, LegacyCommentExample.class, LegacyMenuExample.class, LegacyReportExample.class);
 
-        //then
-        // assertEqual(result, new Progress(Entity));
-        // 전체 Entity 마이그레이션 됐는지 확인하기
+        // when
+        // 대상 EntityList에 대해서 Migration 준비
+        migratorService.readyMigration(targetEntityList);
+        // 받아온 Progress 객체를 result 에 저장하기
+        List<Progress> result = migratorService.migrate(targetEntityList);
+
+        // then
+        List<Progress> answer = new ArrayList<Progress>();
+        answer.add(new Progress(true, dummyUsers.size()));
+        answer.add(new Progress(true, dummyPosts.size()));
+        answer.add(new Progress(true, dummyComments.size()));
+        answer.add(new Progress(true, dummyMenus.size()));
+        answer.add(new Progress(true, dummyReports.size()));
+        assertEquals(result, answer);
+        // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
 
-    private Map<Class, Class> createDummyEntitySet(Integer i){
-        String legacyName = "LegacyDummy" + i.toString() + "Entity";
-        String migrationName = "MigrationDummy" + i.toString() + "Entity";
+    private List<LegacyUserExample> createDummyUser(int num){
+        List<LegacyUserExample> result = new ArrayList<>();
 
-        Map<Class, Class> resultSet = new HashMap<>();
-
-        Class<?> legacyEntity = new ByteBuddy()
-                .subclass(BaseLegacyEntity.class)
-                .name(legacyName)
-                .make()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded();
-
-        Class<?> migrationEntity = new ByteBuddy()
-                .subclass(BaseMigrationEntity.class)
-                .name(migrationName)
-                .make()
-                .load(getClass().getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded();
-
-        resultSet.put(legacyEntity, migrationEntity);
-
-        return resultSet;
-    }
-
-    private void registerEntity(List<Class> entityClassList){
-
-        Set<EntityType<?>> entityTypeList = entityClassList.stream()
-                .map((entityClass) -> {
-                    return new EntityTypeImpl<?>(entityClass);
-                })
-                .collect(Collectors.toSet());
-
-        RepositoryFactoryPostProcessor rfpp = new RepositoryFactoryPostProcessor(entityTypeList);
-    }
-
-    public class LegacyDummyEntity implements BaseLegacyEntity {
-
-
-        @Override
-        public BaseMigrationEntity convert() {
-            return null;
+        for (int i=1; i<=num; i++) {
+            String id = Integer.toString(i);
+            Long userId = (long) i;
+            String name = "test"+ Integer.toString(i);
+            String email = "test@Test.com";
+            String type = "test";
+            Date regDate = new Date();
+            int coin = i;
+            LegacyUserExample newUser = new LegacyUserExample(id, userId, name, email, type, regDate, coin);
+            result.add(newUser);
         }
+
+        return result;
+    }
+
+    private List<LegacyPostExample> createDummyPost(int num){
+        List<LegacyPostExample> result = new ArrayList<>();
+
+        for (int i=1; i<=num; i++) {
+            String id = Integer.toString(i);
+            Long postId = (long) i;
+            Long userId = (long) getRandomId(num);
+            Long menuId = (long) getRandomId(num);
+            String title = "test"+ Integer.toString(i);
+            String content = "testTesttEstteSttesT";
+            Integer view = getRandomId(num);
+            Date regDate = new Date();
+            Date modDate = new Date();
+            LegacyPostExample newPost = new LegacyPostExample(id, postId, userId, menuId, title, content, view, regDate, modDate);
+            result.add(newPost);
+        }
+
+        return result;
+    }
+
+    private List<LegacyCommentExample> createDummyComment(int num){
+        List<LegacyCommentExample> result = new ArrayList<>();
+
+        for (int i=1; i<=num; i++) {
+            String id = Integer.toString(i);
+            Long commentId = (long) i;
+            Long postId = (long) getRandomId(num);
+            Long userId = (long) getRandomId(num);
+            Integer like = getRandomId(num);
+            String comment = "testsetsetsetset";
+            Date regDate = new Date();
+            Date modDate = new Date();
+            LegacyCommentExample newComment = new LegacyCommentExample(id, commentId, postId, userId, like, comment, regDate, modDate);
+            result.add(newComment);
+        }
+
+        return result;
+    }
+
+    private List<LegacyMenuExample> createDummyMenu(int num){
+        List<LegacyMenuExample> result = new ArrayList<>();
+
+        for (int i=1; i<=num; i++) {
+            String id = Integer.toString(i);
+            Long userId = (long) 0;
+            Long menuId = (long) i;
+            String title = "test"+ Integer.toString(i);
+            Integer order = getRandomId(num);
+            Date regDate = new Date();
+            Date modDate = new Date();
+            LegacyMenuExample newMenu = new LegacyMenuExample(id, menuId, title, order, userId, regDate, modDate);
+            result.add(newMenu);
+        }
+
+        return result;
+    }
+
+    private List<LegacyReportExample> createDummyReport(int num){
+        List<LegacyReportExample> result = new ArrayList<>();
+
+        for (int i=1; i<=num; i++) {
+            String id = Integer.toString(i);
+            Long reportId = (long) i;
+            Long reporterId = (long) getRandomId(num);
+            Long targetId = (long) getRandomId(num);
+            Long postId = (long) i;
+            String title = "test"+ Integer.toString(i);
+            String type = "test";
+            String content = "testTesttEstteSttesT";
+            Date regDate = new Date();
+            Date modDate = new Date();
+            LegacyReportExample newReport = new LegacyReportExample(id, reportId, reporterId, targetId, postId, title, type, content, regDate, modDate);
+            result.add(newReport);
+        }
+
+        return result;
+    }
+
+    private int getRandomId(int limit){
+        Random rd = new Random();
+        return (int)(rd.nextInt(limit-1) + 1);
     }
 }
