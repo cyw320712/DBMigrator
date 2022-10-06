@@ -29,7 +29,7 @@ public class LegacyPostExample implements BaseLegacyEntity {
 
     private String content;
 
-    private Integer view;
+    private Long view;
 
     private Date regDate;
 
@@ -40,7 +40,7 @@ public class LegacyPostExample implements BaseLegacyEntity {
         return new MigrationPostExample(postId, userId, menuId, title, content, view, regDate, modDate);
     }
 
-    public LegacyPostExample(String id, Long postId, Long userId, Long menuId, String title, String content, Integer view, Date regDate, Date modDate) {
+    public LegacyPostExample(String id, Long postId, Long userId, Long menuId, String title, String content, Long view, Date regDate, Date modDate) {
         this.id = id;
         this.postId = postId;
         this.userId = userId;

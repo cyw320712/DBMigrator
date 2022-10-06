@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "report")
+@Table(name = "Report", schema = "public")
 public class MigrationReportExample extends BaseMigrationEntity {
     @Id
     private Long reportId;

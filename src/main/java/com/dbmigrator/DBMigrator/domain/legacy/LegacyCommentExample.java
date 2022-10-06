@@ -25,7 +25,7 @@ public class LegacyCommentExample implements BaseLegacyEntity {
 
     private Long userId;
 
-    private Integer like;
+    private Long likeCount;
 
     private String comment;
 
@@ -35,15 +35,15 @@ public class LegacyCommentExample implements BaseLegacyEntity {
 
     @Override
     public MigrationCommentExample convert() {
-        return new MigrationCommentExample(regDate, modDate, commentId, postId, userId, like, comment);
+        return new MigrationCommentExample(regDate, modDate, commentId, postId, userId, likeCount, comment);
     }
 
-    public LegacyCommentExample(String id, Long commentId, Long postId, Long userId, Integer like, String comment, Date regDate, Date modDate) {
+    public LegacyCommentExample(String id, Long commentId, Long postId, Long userId, Long like, String comment, Date regDate, Date modDate) {
         this.id = id;
         this.commentId = commentId;
         this.postId = postId;
         this.userId = userId;
-        this.like = like;
+        this.likeCount = like;
         this.comment = comment;
         this.regDate = regDate;
         this.modDate = modDate;

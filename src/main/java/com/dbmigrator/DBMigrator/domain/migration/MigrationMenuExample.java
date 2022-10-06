@@ -12,22 +12,22 @@ import java.util.Date;
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "menu")
+@Table(name = "Menu", schema = "public")
 public class MigrationMenuExample extends BaseMigrationEntity {
     @Id
     private Long menuId;
 
     private String title;
 
-    private Integer order;
+    private Long turn;
 
     private Long userId;
 
-    public MigrationMenuExample(Date regDate, Date modDate, Long menuId, String title, Integer order, Long userId) {
+    public MigrationMenuExample(Date regDate, Date modDate, Long menuId, String title, Long turn, Long userId) {
         super(regDate, modDate);
         this.menuId = menuId;
         this.title = title;
-        this.order = order;
+        this.turn = turn;
         this.userId = userId;
     }
 }

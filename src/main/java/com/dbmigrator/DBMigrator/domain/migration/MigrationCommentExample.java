@@ -12,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "comment")
+@Table(name = "Comment", schema = "public")
 public class MigrationCommentExample extends BaseMigrationEntity {
     @Id
     private Long commentId;
@@ -21,17 +21,17 @@ public class MigrationCommentExample extends BaseMigrationEntity {
 
     private Long userId;
 
-    private Integer like;
+    private Long likeCount;
 
     private String comment;
 
-    public MigrationCommentExample(Date regDate, Date modDate, Long commentId, Long postId, Long userId, Integer like, String comment) {
+    public MigrationCommentExample(Date regDate, Date modDate, Long commentId, Long postId, Long userId, Long like, String comment) {
         super(regDate, modDate);
 
         this.commentId = commentId;
         this.postId = postId;
         this.userId = userId;
-        this.like = like;
+        this.likeCount = like;
         this.comment = comment;
     }
 }
