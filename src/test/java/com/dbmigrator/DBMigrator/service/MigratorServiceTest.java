@@ -1,6 +1,5 @@
 package com.dbmigrator.DBMigrator.service;
 
-import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.legacy.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.EntityType;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,43 +19,55 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class MigratorServiceTest {
 
-    @Autowired MigratorService migratorService;
+    @Autowired
+    MigratorService migratorService;
+    @Autowired
+    PrepareService prepareService;
     @Autowired
     EntityManager em;
     @Autowired
     ConfigurableApplicationContext currentBeanContext;
-    HashMap<String, MongoRepository> legacyRepositoryManager;
-    HashMap<String, JpaRepository> migrationRepositoryManager;
+    private HashMap<String, MongoRepository> legacyRepositoryManager;
 
-    @BeforeAll()
-    private void setRepositoryManagers() {
-        legacyRepositoryManager = migratorService.getLegacyRepositoryManager();
-        migrationRepositoryManager = migratorService.getMigrationRepositoryManager();
+    void setRepositoryManagers() {
+        legacyRepositoryManager = prepareService.getLegacyRepositoryManager();
     }
 
     @Test
-    public void singleMigration() throws Exception {
+    public void singleMigration() {
         //given
+        prepareService.readyMigration();
+        setRepositoryManagers();
         int light = 1000;
         List<LegacyUserExample> dummyUsers = createDummyUser(light);
         MongoRepository legacyUserRepository = legacyRepositoryManager.get("User");
         legacyUserRepository.saveAll(dummyUsers);
-        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class);
+        List<String> targetEntityList = Arrays.asList("User");
 
         //when
-        migratorService.readyPartialMigration(targetEntityList);
-        List<Progress> result = migratorService.partialMigrate(targetEntityList);
+        long beforeTime = System.currentTimeMillis();
+        List<Progress> result = migratorService.migrate(targetEntityList);
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+        System.out.println("시간차이(m) : "+secDiffTime);
 
         //then
-        List<Progress> answer = new ArrayList<Progress>();
-        for (int i=0; i<result.size(); i++)
-            answer.add(new Progress(true));
-        assertEquals(result, answer);
+        boolean flag = true;
+
+        for (Progress progress : result)
+            if (!progress.getValue()) {
+                flag = false;
+                break;
+            }
+
+        assertTrue(flag);
     }
 
     @Test
     public void lightMigrate() {
         // given
+        prepareService.readyMigration();
+        setRepositoryManagers();
         int light = 1000;
         // Entity 당 1000개씩 더미 데이터 생성
         List<LegacyUserExample> dummyUsers = createDummyUser(light);
@@ -78,25 +88,35 @@ class MigratorServiceTest {
         legacyMenuRepository.saveAll(dummyMenus);
         legacyReportRepository.saveAll(dummyReports);
 
-        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class, LegacyPostExample.class, LegacyCommentExample.class, LegacyMenuExample.class, LegacyReportExample.class);
+        List<String> targetEntityList = Arrays.asList("User", "Post", "Comment", "Menu", "Report");
 
         // when
         // 대상 EntityList에 대해서 Migration 준비
-        migratorService.readyPartialMigration(targetEntityList);
         // 받아온 Progress 객체를 result 에 저장하기
-        List<Progress> result = migratorService.partialMigrate(targetEntityList);
+        long beforeTime = System.currentTimeMillis();
+        List<Progress> result = migratorService.migrate(targetEntityList);
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+        System.out.println("시간차이(m) : "+secDiffTime);
 
         // then
-        List<Progress> answer = new ArrayList<Progress>();
-        for (int i=0; i<result.size(); i++)
-            answer.add(new Progress(true));
-        assertEquals(result, answer);
+        boolean flag = true;
+
+        for (Progress progress : result)
+            if (!progress.getValue()) {
+                flag = false;
+                break;
+            }
+
+        assertTrue(flag);
         // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
 
     @Test
-    public void heavyMigrate() throws Exception {
-        int heavy = 100000;
+    public void heavyMigrate() {
+        prepareService.readyMigration();
+        setRepositoryManagers();
+        int heavy = 10000;
         // Entity 당 100000개씩 더미 데이터 생성
         List<LegacyUserExample> dummyUsers = createDummyUser(heavy);
         List<LegacyPostExample> dummyPosts = createDummyPost(heavy);
@@ -116,19 +136,27 @@ class MigratorServiceTest {
         legacyMenuRepository.saveAll(dummyMenus);
         legacyReportRepository.saveAll(dummyReports);
 
-        List<Class> targetEntityList = Arrays.asList(LegacyUserExample.class, LegacyPostExample.class, LegacyCommentExample.class, LegacyMenuExample.class, LegacyReportExample.class);
+        List<String> targetEntityList = Arrays.asList("User", "Post", "Comment", "Menu", "Report");
 
         // when
         // 대상 EntityList에 대해서 Migration 준비
-        migratorService.readyPartialMigration(targetEntityList);
         // 받아온 Progress 객체를 result 에 저장하기
-        List<Progress> result = migratorService.partialMigrate(targetEntityList);
+        long beforeTime = System.currentTimeMillis();
+        List<Progress> result = migratorService.migrate(targetEntityList);
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+        System.out.println("시간차이(m) : "+secDiffTime);
 
         // then
-        List<Progress> answer = new ArrayList<Progress>();
-        for (int i=0; i<result.size(); i++)
-            answer.add(new Progress(true));
-        assertEquals(result, answer);
+        boolean flag = true;
+
+        for (Progress progress : result)
+            if (!progress.getValue()) {
+                flag = false;
+                break;
+            }
+
+        assertTrue(flag);
         // Repository로 전체 Entity가 migration 됐는지 확인하기
     }
 
@@ -160,7 +188,7 @@ class MigratorServiceTest {
             Long menuId = (long) getRandomId(num);
             String title = "test"+ Integer.toString(i);
             String content = "testTesttEstteSttesT";
-            Integer view = getRandomId(num);
+            Long view = (long) getRandomId(num);
             Date regDate = new Date();
             Date modDate = new Date();
             LegacyPostExample newPost = new LegacyPostExample(id, postId, userId, menuId, title, content, view, regDate, modDate);
@@ -178,7 +206,7 @@ class MigratorServiceTest {
             Long commentId = (long) i;
             Long postId = (long) getRandomId(num);
             Long userId = (long) getRandomId(num);
-            Integer like = getRandomId(num);
+            Long like = (long) getRandomId(num);
             String comment = "testsetsetsetset";
             Date regDate = new Date();
             Date modDate = new Date();
@@ -197,7 +225,7 @@ class MigratorServiceTest {
             Long userId = (long) 0;
             Long menuId = (long) i;
             String title = "test"+ Integer.toString(i);
-            Integer order = getRandomId(num);
+            Long order = (long) getRandomId(num);
             Date regDate = new Date();
             Date modDate = new Date();
             LegacyMenuExample newMenu = new LegacyMenuExample(id, menuId, title, order, userId, regDate, modDate);
