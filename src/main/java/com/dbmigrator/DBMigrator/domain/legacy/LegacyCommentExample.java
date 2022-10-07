@@ -14,7 +14,6 @@ import java.util.Date;
 
 @NoArgsConstructor
 @Getter
-@Entity
 @Document(collection = "Comment")
 public class LegacyCommentExample implements BaseLegacyEntity {
     @Id

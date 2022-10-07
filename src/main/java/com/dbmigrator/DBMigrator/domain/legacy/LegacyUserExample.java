@@ -14,7 +14,6 @@ import java.util.Date;
 
 @NoArgsConstructor
 @Getter
-@Entity
 @Document(collection = "User")
 public class LegacyUserExample implements BaseLegacyEntity {
 
@@ -35,10 +34,8 @@ public class LegacyUserExample implements BaseLegacyEntity {
     private int coin;
 
     @Override
-    public BaseMigrationEntity convert() {
-        MigrationUserExample migrationUser = new MigrationUserExample(userId, email, name, type, coin, regDate);
-
-        return migrationUser;
+    public MigrationUserExample convert() {
+        return new MigrationUserExample(userId, email, name, type, coin, regDate);
     }
 
     public LegacyUserExample(String id, Long userId, String email, String name, String type, Date regDate, int coin) {

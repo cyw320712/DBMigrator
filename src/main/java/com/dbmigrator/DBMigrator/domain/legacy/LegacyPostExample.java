@@ -14,7 +14,6 @@ import java.util.Date;
 
 @NoArgsConstructor
 @Getter
-@Entity()
 @Document(collection = "Post")
 public class LegacyPostExample implements BaseLegacyEntity {
     @Id

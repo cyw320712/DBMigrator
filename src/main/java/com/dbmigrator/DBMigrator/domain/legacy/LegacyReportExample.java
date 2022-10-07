@@ -13,7 +13,6 @@ import java.util.Date;
 
 @NoArgsConstructor
 @Getter
-@Entity
 @Document(collection = "Report")
 public class LegacyReportExample implements BaseLegacyEntity {
     @Id

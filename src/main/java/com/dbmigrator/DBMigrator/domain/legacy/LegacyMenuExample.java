@@ -12,7 +12,6 @@ import javax.persistence.Id;
 import java.util.Date;
 
 @NoArgsConstructor
-@Entity
 @Getter
 @Document(collection = "Menu")
 public class LegacyMenuExample implements BaseLegacyEntity {

@@ -7,7 +7,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import java.util.HashMap;
 
 
 @Configuration // Spring Configuration 임을 명시하는 annotation
@@ -35,6 +39,8 @@ public class MigrationDBConfig {
     @Value("${spring.postgres.password}")
     private String migrationDBPassword;
 
+    @Value("${spring.jpa.hibernate.}")
+
     @Bean(name = "migrationDataSource")
     public HikariDataSource migrationDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
@@ -45,5 +51,17 @@ public class MigrationDBConfig {
         hikariConfig.setSchema(migrationDBSchema);
 
         return new HikariDataSource(hikariConfig);
+    }
+
+    @Bean
+    public LocalContainerEntityManagerFactoryBean migrationEntityManager() {
+        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+        em.setDataSource(migrationDataSource());
+        em.setPackagesToScan("com.dbmigrator.DBMigrator.domain.migration");
+
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        em.setJpaVendorAdapter(vendorAdapter);
+
+        return em;
     }
 }
