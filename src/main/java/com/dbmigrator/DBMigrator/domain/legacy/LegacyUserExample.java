@@ -4,6 +4,7 @@ import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
 import com.dbmigrator.DBMigrator.domain.migration.MigrationUserExample;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,6 +12,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.Date;
 
+@NoArgsConstructor
 @Getter
 @Entity
 @Document(collection = "User")
