@@ -11,20 +11,15 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
 
+@RequiredArgsConstructor
 @Service
 public class MigratorService {
 
     private final PrepareService prepareService;
-    private boolean migrating;
-
-    public MigratorService(PrepareService prepareService) {
-        migrating = false;
-        this.prepareService = prepareService;
-    }
+    private boolean migrating = false;
 
     // TODO: 모니터링
     public List<Progress> getMigrationResult(List<String> targetEntityList) {
-        prepareService.readyMigration();
         List<Progress> result = new ArrayList<>();
 
         if (migrating) {
@@ -37,6 +32,7 @@ public class MigratorService {
     }
 
     public List<Progress> migrate(List<String> targetEntityList) {
+        prepareService.readyMigration();
         migrating = true;
 
         Map<MongoRepository, JpaRepository> taskQueue = prepareService.getLegacyRepositoryManager().entrySet()
