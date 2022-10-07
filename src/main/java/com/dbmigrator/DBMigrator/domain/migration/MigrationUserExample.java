@@ -13,7 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Getter
 @Entity
-@Table(name = "user")
+@Table(name = "user", schema = "public")
 public class MigrationUserExample extends BaseMigrationEntity {
 
     @Id
