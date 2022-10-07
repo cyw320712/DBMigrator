@@ -1,7 +1,5 @@
 package com.dbmigrator.DBMigrator.utils;
 
-import com.mongodb.lang.Nullable;
-import lombok.RequiredArgsConstructor;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType.Loaded;
@@ -14,20 +12,25 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
-import org.springframework.data.repository.Repository;
 
 import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Set;
 
 
-@RequiredArgsConstructor
 public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     // 주입받은 EntityClassList 에 대해서 처리하기
-    private final Set<EntityType<?>> entityClassList;
+    private final Set<EntityType<?>> jpaEntityList;
+    private final Set<MongoPersistentEntity<?>> mongoEntityList;
+
+    public RepositoryFactoryPostProcessor(Set<EntityType<?>> jpaEntityList, Set<MongoPersistentEntity<?>> mongoEntityList){
+        this.jpaEntityList = jpaEntityList;
+        this.mongoEntityList = mongoEntityList;
+    }
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -35,6 +38,7 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
         List<String> jpaEntityDefinitions = getMigrationEntityDefinitions();
 
         mongoEntityDefinitions.forEach((entityDefinition) -> {
+            System.out.println(entityDefinition);
             Class<?> dynamicMongoRepository = createDynamicRepository(entityDefinition, MongoRepository.class);
 
             registerMongoRepositoryFactoryBean(dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
@@ -100,32 +104,50 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
     }
 
     private List<String> getLegacyEntityDefinitions() {
-        return entityClassList.stream()
-                .map(EntityType::getName)
-                .filter(name -> name.contains("Legacy"))
+        String packageName = "com.dbmigrator.DBMigrator.domain.legacy.";
+        return mongoEntityList.stream()
+                .map(MongoPersistentEntity::getName)
+                .map((name)-> {
+                    return name.substring(packageName.length());
+                })
                 .toList();
     }
 
     private List<String> getMigrationEntityDefinitions() {
-        return entityClassList.stream()
+        return jpaEntityList.stream()
                 .map(EntityType::getName)
-                .filter(name -> name.contains("Migration"))
                 .toList();
     }
 
     private Class<?> findTargetEntityClass(String entityName) {
-        EntityType<?> entityClass = null;
+        if (entityName.contains("Migration")){
+            EntityType<?> entityClass = null;
+            for (EntityType<?> e : jpaEntityList) {
+                if (e.getName().equalsIgnoreCase(entityName))
+                    entityClass = e;
+            }
 
-        for (EntityType<?> e : entityClassList) {
-            if (e.getName().equalsIgnoreCase(entityName))
-                entityClass = e;
+            if (entityClass == null) {
+                throw new IllegalStateException("Entity does not exist");
+            }
+            return entityClass.getJavaType();
+        }
+        else{
+            MongoPersistentEntity<?> entityClass = null;
+            String packageName = "com.dbmigrator.DBMigrator.domain.legacy.";
+            for (MongoPersistentEntity<?> e : mongoEntityList) {
+                if (e.getName().substring(packageName.length()).equalsIgnoreCase(entityName))
+                    entityClass = e;
+            }
+
+            if (entityClass == null) {
+                throw new IllegalStateException("Entity does not exist");
+            }
+            return entityClass.getType();
         }
 
-        if (entityClass == null) {
-            throw new IllegalStateException("Entity does not exist");
-        }
 
-        return entityClass.getJavaType();
+
     }
 
     private Class<?> getIdClass(Class<?> repositoryClass) {

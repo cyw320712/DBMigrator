@@ -1,10 +1,6 @@
 package com.dbmigrator.DBMigrator.config;
 
 import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -15,8 +11,6 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableMongoRepositories(
@@ -39,6 +33,12 @@ public class LegacyDBConfig {
     @Value("${spring.mongodb.password}")
     private String legacyDBPassword;
 
+    private final MongoMappingContext mongoMappingContext;
+
+    public LegacyDBConfig(MongoMappingContext mongoMappingContext){
+        this.mongoMappingContext = mongoMappingContext;
+    }
+
     @Bean
     public MongoDatabaseFactory mongoDBFactory() {
         String connectionString = "mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/" + legacyDBBasePackage + "?authSource=admin";
@@ -46,14 +46,9 @@ public class LegacyDBConfig {
     }
 
     @Bean
-    public MongoMappingContext mongoMappingContext() {
-        return new MongoMappingContext();
-    }
-
-    @Bean
     public MongoTemplate mongoTemplate() {
         DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDBFactory());
-        MappingMongoConverter mongoConverter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
+        MappingMongoConverter mongoConverter = new MappingMongoConverter(dbRefResolver, mongoMappingContext);
         mongoConverter.setTypeMapper(new DefaultMongoTypeMapper());
 
         return new MongoTemplate(mongoDBFactory(), mongoConverter);

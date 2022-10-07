@@ -7,20 +7,21 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class PrepareService {
     private final EntityManager em;
+    private final MongoMappingContext mmc;
     private ConfigurableApplicationContext currentBeanContext;
     private HashMap<String, MongoRepository> legacyRepositoryManager;
     private HashMap<String, JpaRepository> migrationRepositoryManager;
@@ -28,13 +29,18 @@ public class PrepareService {
 
     public void readyMigration(){
         if (!readyToMigration){
-            Set<EntityType<?>> entityList = em.getMetamodel().getEntities();
+            Set<EntityType<?>> jpaEntityList = em.getMetamodel().getEntities();
+            Set<MongoPersistentEntity<?>> mongoEntityList = new HashSet<>(mmc.getPersistentEntities());
+
             ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
 
-            RepositoryFactoryPostProcessor repositoryFactory = new RepositoryFactoryPostProcessor(entityList);
-            repositoryFactory.postProcessBeanFactory(beanFactory);
+            RepositoryFactoryPostProcessor jpaRepositoryFactory = new RepositoryFactoryPostProcessor(jpaEntityList, mongoEntityList);
+            jpaRepositoryFactory.postProcessBeanFactory(beanFactory);
 
             String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
+
+//            for(String s : currentBeanDefinitions)
+//                System.out.println(s);
 
             legacyRepositoryManager = getLegacyRepositories(currentBeanDefinitions);
             migrationRepositoryManager = getMigrationRepositories(currentBeanDefinitions);
