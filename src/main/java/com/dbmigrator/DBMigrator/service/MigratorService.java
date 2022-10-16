@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -63,14 +64,16 @@ public class MigratorService {
     }
 
     private Progress singleMigration(BaseLegacyRepository legacyRepository, BaseMigrationRepository migrationRepository) {
-        List<BaseLegacyEntity> legacyEntities;
+        Stream<BaseLegacyEntity> legacyEntities;
         List<BaseMigrationEntity> migrationEntities;
 
         try {
-            legacyEntities = legacyRepository.findAll();
 
-            migrationEntities = legacyEntities.stream()
-                    .map(BaseLegacyEntity::convert).toList();
+            legacyEntities = legacyRepository.findAllByOrderByIdAsc();
+
+            migrationEntities = legacyEntities
+                    .map(BaseLegacyEntity::convert)
+                    .toList();
 
             migrationRepository.saveAll(migrationEntities);
         }
