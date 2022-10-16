@@ -1,5 +1,7 @@
 package com.dbmigrator.DBMigrator.utils;
 
+import com.dbmigrator.DBMigrator.repository.BaseLegacyRepository;
+import com.dbmigrator.DBMigrator.repository.BaseMigrationRepository;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -10,11 +12,9 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 
 import javax.persistence.metamodel.EntityType;
@@ -39,14 +39,14 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
         List<String> jpaEntityDefinitions = getMigrationEntityDefinitions();
 
         mongoEntityDefinitions.forEach((entityDefinition) -> {
-            Class<?> dynamicMongoRepository = createDynamicRepository(entityDefinition, MongoRepository.class);
+            Class<?> dynamicMongoRepository = createDynamicRepository(entityDefinition, BaseLegacyRepository.class);
             BeanDefinitionBuilder mongoRepositoryFactoryBeanDefinition = createMongoRepositoryFactoryBeanDefinition(dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
             String beanName = convertCamelToBeanName(dynamicMongoRepository.getName());
             registerRepositoryFactoryBean(beanName, mongoRepositoryFactoryBeanDefinition, (DefaultListableBeanFactory) beanFactory);
         });
 
         jpaEntityDefinitions.forEach((entityDefinition) -> {
-            Class<?> dynamicJpaRepository = createDynamicRepository(entityDefinition, JpaRepository.class);
+            Class<?> dynamicJpaRepository = createDynamicRepository(entityDefinition, BaseMigrationRepository.class);
             BeanDefinitionBuilder jpaRepositoryFactoryBeanDefinition = createJpaRepositoryFactoryBeanDefinition(dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
             String beanName = convertCamelToBeanName(dynamicJpaRepository.getName());
             registerRepositoryFactoryBean(beanName, jpaRepositoryFactoryBeanDefinition, (DefaultListableBeanFactory) beanFactory);
@@ -147,7 +147,7 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
     }
 
     private Class<?> getIdClass(Class<?> repositoryClass) {
-        return repositoryClass == JpaRepository.class ? Long.class : String.class;
+        return repositoryClass == BaseMigrationRepository.class ? Long.class : String.class;
     }
 
     private String convertCamelToBeanName(String camelName) {

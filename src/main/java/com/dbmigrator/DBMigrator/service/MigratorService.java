@@ -2,14 +2,16 @@ package com.dbmigrator.DBMigrator.service;
 
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
+import com.dbmigrator.DBMigrator.repository.BaseLegacyRepository;
+import com.dbmigrator.DBMigrator.repository.BaseMigrationRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
+
+
 
 @RequiredArgsConstructor
 @Service
@@ -35,7 +37,7 @@ public class MigratorService {
         prepareService.readyMigration();
         migrating = true;
 
-        Map<MongoRepository, JpaRepository> taskQueue = prepareService.getLegacyRepositoryManager().entrySet()
+        Map<BaseLegacyRepository, BaseMigrationRepository> taskQueue = prepareService.getLegacyRepositoryManager().entrySet()
                 .stream()
                 .filter(e -> {
                     if (targetEntityList == null) return true;
@@ -43,13 +45,13 @@ public class MigratorService {
                 })
                 .collect(toMap(
                         e -> e.getValue(),
-                        e -> (JpaRepository) prepareService.getMigrationRepositoryManager().get(e.getKey()))
+                        e -> (BaseMigrationRepository) prepareService.getMigrationRepositoryManager().get(e.getKey()))
                 );
 
         List<Progress> results = taskQueue.entrySet().parallelStream()
                 .map(entry -> {
-                    MongoRepository legacyRepository = entry.getKey();
-                    JpaRepository migrationRepository = entry.getValue();
+                    BaseLegacyRepository legacyRepository = entry.getKey();
+                    BaseMigrationRepository migrationRepository = entry.getValue();
 
                     Progress result = singleMigration(legacyRepository, migrationRepository);
 
@@ -60,7 +62,7 @@ public class MigratorService {
         return results;
     }
 
-    private Progress singleMigration(MongoRepository legacyRepository, JpaRepository migrationRepository) {
+    private Progress singleMigration(BaseLegacyRepository legacyRepository, BaseMigrationRepository migrationRepository) {
         List<BaseLegacyEntity> legacyEntities;
         List<BaseMigrationEntity> migrationEntities;
 
