@@ -38,8 +38,6 @@ public class PrepareService {
 
             String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
 
-            for(String s : currentBeanDefinitions)
-                System.out.println(s);
             legacyRepositoryManager = getLegacyRepositories(currentBeanDefinitions);
             migrationRepositoryManager = getMigrationRepositories(currentBeanDefinitions);
 
