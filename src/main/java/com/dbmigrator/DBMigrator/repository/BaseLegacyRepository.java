@@ -1,4 +1,6 @@
 package com.dbmigrator.DBMigrator.repository;
 
-public interface BaseLegacyRepository<T, String> extends BaseMongoRepository<T, String>{
+import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
+
+public interface BaseLegacyRepository<T extends BaseLegacyEntity, String> extends BaseMongoRepository<T, String>{
 }

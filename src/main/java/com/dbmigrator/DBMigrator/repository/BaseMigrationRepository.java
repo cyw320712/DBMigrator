@@ -1,4 +1,6 @@
 package com.dbmigrator.DBMigrator.repository;
 
-public interface BaseMigrationRepository<T, Long> extends BaseJpaRepository<T, Long>{
+import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
+
+public interface BaseMigrationRepository<T extends BaseMigrationEntity, Long> extends BaseJpaRepository<T, Long>{
 }
