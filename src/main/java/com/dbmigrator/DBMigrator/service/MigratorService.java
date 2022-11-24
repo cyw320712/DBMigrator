@@ -1,17 +1,18 @@
 package com.dbmigrator.DBMigrator.service;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.dbmigrator.DBMigrator.domain.common.BaseLegacyEntity;
 import com.dbmigrator.DBMigrator.domain.common.BaseMigrationEntity;
 import com.dbmigrator.DBMigrator.repository.BaseLegacyRepository;
 import com.dbmigrator.DBMigrator.repository.BaseMigrationRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toMap;
-
 
 
 @RequiredArgsConstructor
@@ -27,8 +28,7 @@ public class MigratorService {
 
         if (migrating) {
             // 마이그레이션 중인 경우, 얼만큼 마이그레이션이 진행됐는지 반환
-        }
-        else {
+        } else {
             result = migrate(targetEntityList);
         }
         return result;
@@ -38,17 +38,22 @@ public class MigratorService {
         prepareService.readyMigration();
         migrating = true;
 
-        Map<BaseLegacyRepository, BaseMigrationRepository> taskQueue = prepareService.getLegacyRepositoryManager().entrySet()
+        Map<BaseLegacyRepository, BaseMigrationRepository> taskQueue = prepareService.getLegacyRepositoryManager()
+                .entrySet()
                 .stream()
                 .filter(e -> {
-                    if (targetEntityList == null) return true;
-                    else return targetEntityList.contains(e.getKey());
+                    if (targetEntityList == null) {
+                        return true;
+                    } else {
+                        return targetEntityList.contains(e.getKey());
+                    }
                 })
                 .collect(toMap(
                         e -> e.getValue(),
-                        e -> (BaseMigrationRepository) prepareService.getMigrationRepositoryManager().get(e.getKey()))
+                        e -> prepareService.getMigrationRepositoryManager().get(e.getKey()))
                 );
 
+        long before = System.currentTimeMillis();
         List<Progress> results = taskQueue.entrySet().parallelStream()
                 .map(entry -> {
                     BaseLegacyRepository legacyRepository = entry.getKey();
@@ -58,29 +63,31 @@ public class MigratorService {
 
                     return result;
                 })
-                .toList();
+                .collect(Collectors.toList());
+        long after = System.currentTimeMillis();
+        System.out.println((after - before) / 1000);
 
         return results;
     }
 
-    private Progress singleMigration(BaseLegacyRepository legacyRepository, BaseMigrationRepository migrationRepository) {
+    private Progress singleMigration(BaseLegacyRepository legacyRepository,
+                                     BaseMigrationRepository migrationRepository) {
         Stream<BaseLegacyEntity> legacyEntities;
         List<BaseMigrationEntity> migrationEntities;
 
-        try {
+        long totalEntityCount = migrationRepository.count();
 
+        try {
             legacyEntities = legacyRepository.findAllByOrderByIdAsc();
 
             migrationEntities = legacyEntities
                     .map(BaseLegacyEntity::convert)
-                    .toList();
+                    .collect(Collectors.toList());
 
             migrationRepository.saveAll(migrationEntities);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return new Progress(false);
-        }
-        finally {
+        } finally {
             // 불필요해진 Entity 데이터들 null out
             legacyEntities = null;
             migrationEntities = null;
