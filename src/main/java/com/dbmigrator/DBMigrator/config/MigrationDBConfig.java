@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration // Spring Configuration 임을 명시하는 annotation
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = { "com.dbmigrator.DBMigrator.domain.migration" }// Postgres 가 매핑할 Entity 가 있는 패키지 위치
+        basePackages = {"com.dbmigrator.DBMigrator.domain.migration"}// Postgres 가 매핑할 Entity 가 있는 패키지 위치
 )
 @ComponentScan(basePackages = {"com.dbmigrator.DBMigrator.domain.migration"})
 public class MigrationDBConfig {
@@ -41,7 +41,8 @@ public class MigrationDBConfig {
     public HikariDataSource migrationDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setDriverClassName("org.postgresql.Driver");
-        hikariConfig.setJdbcUrl("jdbc:postgresql://" + migrationDBHost + ":" + migrationDBPort + "/" + migrationDBName + "?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true");
+        hikariConfig.setJdbcUrl("jdbc:postgresql://" + migrationDBHost + ":" + migrationDBPort + "/" + migrationDBName
+                + "?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true");
         hikariConfig.setUsername(migrationDBUsername);
         hikariConfig.setPassword(migrationDBPassword);
         hikariConfig.setSchema(migrationDBSchema);

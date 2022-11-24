@@ -8,7 +8,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
@@ -18,30 +21,27 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 )
 @ComponentScan(basePackages = {"com.dbmigrator.DBMigrator.domain.legacy"})
 public class LegacyDBConfig {
+    private final MongoMappingContext mongoMappingContext;
     @Value("${spring.mongodb.host}")
     private String legacyDBHost;
-
     @Value("${spring.mongodb.port}")
     private String legacyDBPort;
-
     @Value("${spring.mongodb.base-package}")
     private String legacyDBBasePackage;
-
     @Value("${spring.mongodb.username}")
     private String legacyDBUsername;
-
     @Value("${spring.mongodb.password}")
     private String legacyDBPassword;
 
-    private final MongoMappingContext mongoMappingContext;
-
-    public LegacyDBConfig(MongoMappingContext mongoMappingContext){
+    public LegacyDBConfig(MongoMappingContext mongoMappingContext) {
         this.mongoMappingContext = mongoMappingContext;
     }
 
     @Bean
     public MongoDatabaseFactory mongoDBFactory() {
-        String connectionString = "mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/" + legacyDBBasePackage + "?authSource=admin";
+        String connectionString =
+                "mongodb://" + legacyDBUsername + ":" + legacyDBPassword + "@" + legacyDBHost + ":" + legacyDBPort + "/"
+                        + legacyDBBasePackage + "?authSource=admin";
         return new SimpleMongoClientDatabaseFactory(new ConnectionString(connectionString));
     }
 

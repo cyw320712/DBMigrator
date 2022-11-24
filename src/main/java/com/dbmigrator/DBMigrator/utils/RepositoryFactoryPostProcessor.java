@@ -2,6 +2,10 @@ package com.dbmigrator.DBMigrator.utils;
 
 import com.dbmigrator.DBMigrator.repository.BaseLegacyRepository;
 import com.dbmigrator.DBMigrator.repository.BaseMigrationRepository;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.persistence.metamodel.EntityType;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -17,10 +21,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 
-import javax.persistence.metamodel.EntityType;
-import java.util.List;
-import java.util.Set;
-
 
 public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor {
 
@@ -28,7 +28,8 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
     private final Set<EntityType<?>> jpaEntityList;
     private final Set<MongoPersistentEntity<?>> mongoEntityList;
 
-    public RepositoryFactoryPostProcessor(Set<EntityType<?>> jpaEntityList, Set<MongoPersistentEntity<?>> mongoEntityList){
+    public RepositoryFactoryPostProcessor(Set<EntityType<?>> jpaEntityList,
+                                          Set<MongoPersistentEntity<?>> mongoEntityList) {
         this.jpaEntityList = jpaEntityList;
         this.mongoEntityList = mongoEntityList;
     }
@@ -40,20 +41,25 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
 
         mongoEntityDefinitions.forEach((entityDefinition) -> {
             Class<?> dynamicMongoRepository = createDynamicRepository(entityDefinition, BaseLegacyRepository.class);
-            BeanDefinitionBuilder mongoRepositoryFactoryBeanDefinition = createMongoRepositoryFactoryBeanDefinition(dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
+            BeanDefinitionBuilder mongoRepositoryFactoryBeanDefinition = createMongoRepositoryFactoryBeanDefinition(
+                    dynamicMongoRepository, (DefaultListableBeanFactory) beanFactory);
             String beanName = convertCamelToBeanName(dynamicMongoRepository.getName());
-            registerRepositoryFactoryBean(beanName, mongoRepositoryFactoryBeanDefinition, (DefaultListableBeanFactory) beanFactory);
+            registerRepositoryFactoryBean(beanName, mongoRepositoryFactoryBeanDefinition,
+                    (DefaultListableBeanFactory) beanFactory);
         });
 
         jpaEntityDefinitions.forEach((entityDefinition) -> {
             Class<?> dynamicJpaRepository = createDynamicRepository(entityDefinition, BaseMigrationRepository.class);
-            BeanDefinitionBuilder jpaRepositoryFactoryBeanDefinition = createJpaRepositoryFactoryBeanDefinition(dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
+            BeanDefinitionBuilder jpaRepositoryFactoryBeanDefinition = createJpaRepositoryFactoryBeanDefinition(
+                    dynamicJpaRepository, (DefaultListableBeanFactory) beanFactory);
             String beanName = convertCamelToBeanName(dynamicJpaRepository.getName());
-            registerRepositoryFactoryBean(beanName, jpaRepositoryFactoryBeanDefinition, (DefaultListableBeanFactory) beanFactory);
+            registerRepositoryFactoryBean(beanName, jpaRepositoryFactoryBeanDefinition,
+                    (DefaultListableBeanFactory) beanFactory);
         });
     }
 
-    private BeanDefinitionBuilder createMongoRepositoryFactoryBeanDefinition(Class<?> mongoRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory){
+    private BeanDefinitionBuilder createMongoRepositoryFactoryBeanDefinition(Class<?> mongoRepositoryClass,
+                                                                             DefaultListableBeanFactory defaultListableBeanFactory) {
         MongoTemplate mongoTemplate = defaultListableBeanFactory.getBean(MongoTemplate.class);
 
         return BeanDefinitionBuilder.rootBeanDefinition(MongoRepositoryFactoryBean.class)
@@ -61,12 +67,14 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
                 .addPropertyValue("mongoOperations", mongoTemplate);
     }
 
-    private BeanDefinitionBuilder createJpaRepositoryFactoryBeanDefinition(Class<?> jpaRepositoryClass, DefaultListableBeanFactory defaultListableBeanFactory) {
+    private BeanDefinitionBuilder createJpaRepositoryFactoryBeanDefinition(Class<?> jpaRepositoryClass,
+                                                                           DefaultListableBeanFactory defaultListableBeanFactory) {
         return BeanDefinitionBuilder.rootBeanDefinition(JpaRepositoryFactoryBean.class)
                 .addConstructorArgValue(jpaRepositoryClass);
     }
 
-    private void registerRepositoryFactoryBean(String beanName, BeanDefinitionBuilder beanDefinitionBuilder, DefaultListableBeanFactory df) {
+    private void registerRepositoryFactoryBean(String beanName, BeanDefinitionBuilder beanDefinitionBuilder,
+                                               DefaultListableBeanFactory df) {
         df.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
     }
 
@@ -82,7 +90,8 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
         return generatedClass.getLoaded();
     }
 
-    private TypeDescription.Generic buildRepositoryTypeDescription(Class<?> repositoryClass, Class<?> entityClass, Class<?> idClass) {
+    private TypeDescription.Generic buildRepositoryTypeDescription(Class<?> repositoryClass, Class<?> entityClass,
+                                                                   Class<?> idClass) {
         return TypeDescription.Generic.Builder
                 .parameterizedType(repositoryClass, entityClass, idClass)
                 .build();
@@ -102,25 +111,26 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
         String packageName = "com.dbmigrator.DBMigrator.domain.legacy.";
         return mongoEntityList.stream()
                 .map(MongoPersistentEntity::getName)
-                .map((name)-> {
+                .map((name) -> {
                     return name.substring(packageName.length());
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private List<String> getMigrationEntityDefinitions() {
         return jpaEntityList.stream()
                 .map(EntityType::getName)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private Class<?> findTargetEntityClass(String entityName) {
-        if (entityName.contains("Migration")){
+        if (entityName.contains("Migration")) {
             EntityType<?> entityClass = null;
 
             for (EntityType<?> e : jpaEntityList) {
-                if (e.getName().equalsIgnoreCase(entityName))
+                if (e.getName().equalsIgnoreCase(entityName)) {
                     entityClass = e;
+                }
             }
 
             if (entityClass == null) {
@@ -128,14 +138,14 @@ public class RepositoryFactoryPostProcessor implements BeanFactoryPostProcessor 
             }
 
             return entityClass.getJavaType();
-        }
-        else{
+        } else {
             MongoPersistentEntity<?> entityClass = null;
             String packageName = "com.dbmigrator.DBMigrator.domain.legacy.";
 
             for (MongoPersistentEntity<?> e : mongoEntityList) {
-                if (e.getName().substring(packageName.length()).equalsIgnoreCase(entityName))
+                if (e.getName().substring(packageName.length()).equalsIgnoreCase(entityName)) {
                     entityClass = e;
+                }
             }
 
             if (entityClass == null) {

@@ -3,6 +3,14 @@ package com.dbmigrator.DBMigrator.service;
 import com.dbmigrator.DBMigrator.repository.BaseLegacyRepository;
 import com.dbmigrator.DBMigrator.repository.BaseMigrationRepository;
 import com.dbmigrator.DBMigrator.utils.RepositoryFactoryPostProcessor;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -11,10 +19,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.stereotype.Service;
-
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.EntityType;
-import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -26,14 +30,15 @@ public class PrepareService {
     private HashMap<String, BaseMigrationRepository> migrationRepositoryManager;
     private Boolean readyToMigration = false;
 
-    public void readyMigration(){
-        if (!readyToMigration){
+    public void readyMigration() {
+        if (!readyToMigration) {
             Set<EntityType<?>> jpaEntityList = em.getMetamodel().getEntities();
             Set<MongoPersistentEntity<?>> mongoEntityList = new HashSet<>(mappingContext.getPersistentEntities());
 
             ConfigurableListableBeanFactory beanFactory = currentBeanContext.getBeanFactory();
 
-            RepositoryFactoryPostProcessor jpaRepositoryFactory = new RepositoryFactoryPostProcessor(jpaEntityList, mongoEntityList);
+            RepositoryFactoryPostProcessor jpaRepositoryFactory = new RepositoryFactoryPostProcessor(jpaEntityList,
+                    mongoEntityList);
             jpaRepositoryFactory.postProcessBeanFactory(beanFactory);
 
             String[] currentBeanDefinitions = currentBeanContext.getBeanDefinitionNames();
@@ -42,17 +47,16 @@ public class PrepareService {
             migrationRepositoryManager = getMigrationRepositories(currentBeanDefinitions);
 
             readyToMigration = true;
-        }
-        else{
+        } else {
             System.out.println("Already Created and injected Dynamic Repositories!");
         }
     }
 
-    public HashMap<String, BaseLegacyRepository> getLegacyRepositoryManager(){
+    public HashMap<String, BaseLegacyRepository> getLegacyRepositoryManager() {
         return legacyRepositoryManager;
     }
 
-    public HashMap<String, BaseMigrationRepository> getMigrationRepositoryManager(){
+    public HashMap<String, BaseMigrationRepository> getMigrationRepositoryManager() {
         return migrationRepositoryManager;
     }
 
@@ -80,16 +84,18 @@ public class PrepareService {
 
         migrationRepositoryNameList
                 .forEach(beanName -> resultMap.put(
-                        beanName.substring(9, beanName.length() - repositoryLen),
-                        (BaseMigrationRepository) currentBeanContext.getBean(beanName)
-                    )
+                                beanName.substring(9, beanName.length() - repositoryLen),
+                                (BaseMigrationRepository) currentBeanContext.getBean(beanName)
+                        )
                 );
 
         return resultMap;
     }
 
     private List<String> getTargetRepositoryNameList(String[] currentBeanDefinitions, String repositoryType) {
-        return Arrays.stream(currentBeanDefinitions).filter(ob -> isTargetRepository(ob, repositoryType)).toList();
+        return Arrays.stream(currentBeanDefinitions)
+                .filter(ob -> isTargetRepository(ob, repositoryType))
+                .collect(Collectors.toList());
     }
 
     private boolean isTargetRepository(String ob, String repositoryType) {

@@ -1,11 +1,9 @@
 package com.dbmigrator.DBMigrator.service;
 
-import java.util.*;
-
 public class Progress {
     private Boolean value;
 
-    public Progress(){
+    public Progress() {
         value = false;
     }
 
@@ -13,7 +11,7 @@ public class Progress {
         value = true;
     }
 
-    public Boolean getValue(){
+    public Boolean getValue() {
         return value;
     }
 }
