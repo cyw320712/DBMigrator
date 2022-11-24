@@ -2,11 +2,12 @@ plugins {
 	id 'org.springframework.boot' version '2.7.3'
 	id 'io.spring.dependency-management' version '1.0.13.RELEASE'
 	id 'java'
+	id 'jacoco'
 }
 
 group = 'com.dbmigrator'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+sourceCompatibility = '11'
 
 configurations {
 	compileOnly {
@@ -18,17 +19,33 @@ repositories {
 	mavenCentral()
 }
 
+jacoco {
+	toolVersion = "0.8.5"
+	reportsDir = file("$buildDir/customJacocoReportDir")
+}
+
+jacocoTestReport {
+	reports {
+		xml.enabled false
+		csv.enabled false
+		html.destination file("${buildDir}/jacocoHtml")
+	}
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	compileOnly 'com.vladmihalcea:hibernate-types-52:2.19.2'
+	compileOnly 'com.vladmihalcea:hibernate-types-52:2.20.0'
 	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
 
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+	runtimeOnly 'org.postgresql:postgresql'
+
+	testImplementation 'org.assertj:assertj-core:3.15.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
